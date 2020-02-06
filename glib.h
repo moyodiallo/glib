@@ -11,7 +11,7 @@ typedef struct edgelist{
 	unsigned long n;        /*number of nodes*/
 	unsigned long e;        /*number of edges*/
 	edge *edges;            /*list of edges*/
-    int directed;        /*1 if directed else 1*/
+    char directed;        /*1 if directed else 1*/
 } edgelist;
 
 /*edge list structure:*/
@@ -32,15 +32,15 @@ typedef struct adjmatrix{
 } adjmatrix;
 
 /*build from file*/
-edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges);
+edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, char directed);
 
 /*build from edges list*/
-adjlist*   make_adjlist_edges(edgelist* edges);
-adjmatrix* make_adjmatrix_edges(edgelist* edges);
+adjlist*   make_adjlist_edges(edgelist*);
+adjmatrix* make_adjmatrix_edges(edgelist*);
 
 
-void free_edgelist(edgelist* ed);
-void free_adjlist(adjlist* ad);
-void free_adjmatrix(adjmatrix* mat);
+void free_edgelist(edgelist*);
+void free_adjlist(adjlist*);
+void free_adjmatrix(adjmatrix*);
 
 #endif

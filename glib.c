@@ -4,8 +4,7 @@
 #include "glib.h"
 
 
-
-edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, int directed){
+edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, char directed){
     FILE *file  = fopen(input,"r");
     edgelist* g = malloc(sizeof(edgelist));
     unsigned long n = 0;
@@ -35,51 +34,56 @@ edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, int d
 
 adjlist*   make_adjlist_edges(edgelist* e_list){
     unsigned long i,u,v;
-	unsigned long *d = calloc(edges->n,sizeof(unsigned long));
-    adjlist* adj     = malloc(sizeof(adjlist));
+	unsigned long *d  = calloc(e_list->n,sizeof(unsigned long));
+    adjlist* adj_list = malloc(sizeof(adjlist));
 
-	for (i=0;i<g->e;i++) {
-        if(edges->directed == 0){
-		    d[g->edges[i].s]++;
-		    d[g->edges[i].t]++;
+	for (i=0;i<e_list->e;i++) {
+        if(e_list->directed == 0){
+		    d[e_list->edges[i].s]++;
+		    d[e_list->edges[i].t]++;
         }else{
-            d[g->edges[i].s]++;
+            d[e_list->edges[i].s]++;
         }
 	}
 
-	g->cd=malloc((g->n+1)*sizeof(unsigned long));
-	g->cd[0]=0;
-	for (i=1;i<g->n+1;i++) {
-		g->cd[i]=g->cd[i-1]+d[i-1];
+	adj_list->cd    = malloc((e_list->n+1)*sizeof(unsigned long));
+	adj_list->cd[0] = 0;
+	for (i=1;i<e_list->n+1;i++) {
+		adj_list->cd[i]=adj_list->cd[i-1]+d[i-1];
 		d[i-1]=0;
 	}
 
-	g->adj=malloc(2*g->e*sizeof(unsigned long));
-
-	for (i=0;i<g->e;i++) {
-		u=g->edges[i].s;
-		v=g->edges[i].t;
-		g->adj[ g->cd[u] + d[u]++ ]=v;
-		g->adj[ g->cd[v] + d[v]++ ]=u;
+	adj_list->adj=malloc(2*e_list->e*sizeof(unsigned long));
+	for (i=0;i<e_list->e;i++) {
+		u = e_list->edges[i].s;
+		v = e_list->edges[i].t;
+		adj_list->adj[ adj_list->cd[u] + d[u]++ ] = v;
+		adj_list->adj[ adj_list->cd[v] + d[v]++ ] = u;
 	}
 
 	free(d);
-    return adj;
+    return adj_list;
 }
 
-adjmatrix* make_adjmatrix_edges(edgelist* edges){
+adjmatrix* make_adjmatrix_edges(edgelist* e_list){
     unsigned long i,u,v;
-    adjmatrix* mat = malloc(sizeof(adjmatrix));
+    adjmatrix* adj_mat = malloc(sizeof(adjmatrix));
+	adj_mat->mat = calloc(e_list->n*e_list->n,sizeof(char));
 
-	g->mat=calloc(g->n*g->n,sizeof(bool));
-	for (i=0;i<g->e;i++){
-		u=g->edges[i].s;
-		v=g->edges[i].t;
-		g->mat[u+g->n*v]=1;
-		g->mat[v+g->n*u]=1;
+	for (i=0;i<e_list->e;i++){
+
+		u = e_list->edges[i].s;
+		v = e_list->edges[i].t;
+
+        if(e_list->directed == 0){
+		    adj_mat->mat[u + adj_mat->n * v] = 1;
+		    adj_mat->mat[v + adj_mat->n * u] = 1;
+        }else
+        {
+            adj_mat->mat[u + adj_mat->n * v] = 1;
+        }   
 	}
-
-    return mat;
+    return adj_mat;
 }
 
 void free_edgelist(edgelist* ed){
