@@ -11,7 +11,7 @@ typedef struct edgelist{
 	unsigned long n;        /*number of nodes*/
 	unsigned long e;        /*number of edges*/
 	edge *edges;            /*list of edges*/
-    char undirected;        /*1 if directed else 0*/
+    int directed;        /*1 if directed else 1*/
 } edgelist;
 
 /*edge list structure:*/
