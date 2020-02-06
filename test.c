@@ -27,9 +27,13 @@ void create_file_test(){
 int main(){
     edgelist* ed = NULL;
     create_file_test();
-    ed = make_edgelist_file("test_data.txt", NB_NODE, NB_EDGE);
+    ed = make_edgelist_file("test_data.txt", NB_NODE, NB_EDGE,0);
     for(unsigned long i=0; i<ed->e; i++){
         printf("%lu %lu\n", ed->edges[i].s, ed->edges[i].t);
     }
+
+    adjlist* adj = make_adjlist_edges(ed);
+
+    free_adjlist(adj);
     free_edgelist(ed);
 }
