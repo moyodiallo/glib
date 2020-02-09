@@ -6,7 +6,7 @@
 
 void print_edgelsit(edgelist* e_list){
     unsigned long i ;
-    for (i= 0; i < e_list->n; i++)
+    for (i= 0; i < e_list->e; i++)
     {
         if(e_list->edges[i].s != 0){
             printf("%lu %lu\n",e_list->edges[i].s,e_list->edges[i].t);
@@ -71,7 +71,7 @@ edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, char 
     g->edges=malloc(g->e*sizeof(edge));
 
     while (fscanf(file,"%lu %lu",&(g->edges[n].s), &(g->edges[n].t)) == 2){
-        if(n == g->n) 
+        if(n == g->e) 
         {
             printf("fail: limit of edges");
             exit(EXIT_FAILURE);
@@ -136,6 +136,7 @@ adjmatrix* make_adjmatrix_edges(edgelist* e_list){
 
     adj_mat->e = e_list->e;
     adj_mat->n = e_list->n;
+    adj_mat->directed = e_list->directed;
 
 	for (i=0;i<e_list->e;i++){
 
@@ -177,7 +178,7 @@ void generate4clusters(unsigned long n_of_nodes, double p, double q){
     {
         for ( j = i; j < n_of_nodes+1; j++)
         {
-            r = (double)rand() / (double)((unsigned)RAND_MAX + 1);
+            r = ((double)rand() / (double)((unsigned)RAND_MAX + 1));
             if ( r <= p && clusters[i] == clusters[j] ){
                 printf("%lu %lu\n",i,j);
             }else if( r <= q && clusters[i] != clusters[j] ){
@@ -186,6 +187,102 @@ void generate4clusters(unsigned long n_of_nodes, double p, double q){
         }  
     }
     
+}
+
+int random_int(int min, int max)
+{
+   return min + rand() % (max+1 - min);
+}
+
+void shuffle_random(unsigned long* vector, unsigned long size){
+    unsigned long i,t;
+    srand(time(0));
+    for (i = 1; i < size; i++){
+        int n = random_int(i+1,size);
+        t     = vector[n];
+        vector[n] = vector[i];
+        vector[i] = t;
+    }
+}
+
+unsigned long* label_propagation(adjlist* adj_list, int times){
+    int change;
+    unsigned long i,j,t,node,max,n,ng;
+    unsigned long* lb = malloc((adj_list->n+1)*sizeof(unsigned long));
+    unsigned long *cu = malloc((adj_list->n+1)*sizeof(unsigned long));
+    unsigned long *nd = malloc((adj_list->n+1)*sizeof(unsigned long));
+
+    for (i = 1; i < adj_list->n+1; i++){
+        if(n_of_neighbor(adj_list,i) != 0){
+            lb[i] = i;
+            nd[i] = i;
+        }else{
+            lb[i] = 0;
+            nd[i] = 0;
+        }
+    }
+
+
+    change = 1;
+    for (i = 0; i < (unsigned long)times; i++){
+        shuffle_random(nd,adj_list->n);
+
+        /*
+        for (i=1; i < adj_list->n+1; i++)
+        {
+            printf("%lu\n", nd[i]);
+        }
+        exit(EXIT_FAILURE);
+        */
+        
+        for ( j = 1; j < adj_list->n+1; j++){
+            node  = 0;
+            max   = 0;
+            n     = nd[j]; /*the node shuffled*/
+            
+
+            if(n == 0) continue; /*this node have not to exist*/
+
+            cu[lb[n]] = 0; /*for counting label localy*/
+            for (t = adj_list->cd[n-1]; t < adj_list->cd[n]; t++){
+                ng = adj_list->adj[t];
+                cu[ lb[ng] ] = 0;
+            }
+
+            for (t = adj_list->cd[n-1]; t < adj_list->cd[n]; t++){
+                ng = adj_list->adj[t];
+                cu[ lb[ng] ]++;
+            }
+
+            cu[ lb[n] ]++;
+
+            /* search most neighbour-hood*/
+            for (t = adj_list->cd[n-1]; t < adj_list->cd[n]; t++){
+                ng = adj_list->adj[t];
+                if(cu[ lb[ng] ] > max){
+                    max  = cu[ lb[ng] ];  /*max label amount neighbours*/
+                    node = ng;            /*node choosed*/
+                }
+            }
+
+            if(node == 0){
+                continue;
+            }
+            
+            if(cu[ lb[node] ] == cu[ lb[n] ]){
+                lb[n] = lb[node];
+            }else if( cu[ lb[node] ] > cu[ lb[n] ]){
+                lb[n] = lb[node];
+            }
+        }
+    }
+    free(cu);
+    free(nd);
+    return lb;
+}
+
+unsigned long n_of_neighbor(adjlist* a_list, unsigned long n){
+    return a_list->cd[n] - a_list->cd[n-1];
 }
 
 void free_edgelist(edgelist* ed){
@@ -208,5 +305,85 @@ void free_adjmatrix(adjmatrix* mat){
         if(mat->mat != NULL) free(mat->mat);
         free(mat);
     }
+}
+
+fifo* make_fifo(unsigned long size){
+    fifo* f   = malloc(sizeof(fifo));
+    f->size   = size+1;
+    f->i      = 0;
+    f->j      = 0;
+    f->value = malloc((size+1)*sizeof(unsigned long));
+    return f;
+}
+
+int is_full_fifo(fifo* f){
+    if(f->j == (f->i +1) % f->size)
+        return 1;
+    else 
+        return 0;
+}
+
+unsigned long pop_fifo(fifo* f){
+    unsigned long p;
+    if(f->j == f->i) return 0;
+    p = f->value[f->j];
+    f->j++;
+    f->j = f->j % f->size;
+    return p;
+}
+
+void push_fifo(fifo* f, unsigned long val){
+    if(is_full_fifo(f) == 1){
+        printf("fail: fifo is full\n");
+        exit(EXIT_FAILURE);
+    }
+    f->value[f->i] = val;
+    f->i++;
+    f->i = f->i % f->size;
+}
+
+void sort_by_source(edgelist* e_list){
+    unsigned long i,j;
+    
+    edge* buck = malloc((e_list->n+1)*sizeof(edge));
+    for (i = 0; i < e_list->e; i++){
+        buck[ e_list->edges[i].s ] = e_list->edges[i];
+    }
+    
+    j = 0;
+    for (i = 1; i < e_list->n+1; i++){
+        if(buck[i].s != 0){
+            e_list->edges[j] = buck[i];
+            j++;
+            printf("%lu\n",j);
+        }
+
+        if(j == e_list->e) 
+            break;
+    }
+    free(buck);
+}
+
+void sort_by_target(edgelist* e_list){
+    unsigned long i,j;
+    
+    edge* buck = malloc((e_list->n+1)*sizeof(edge));
+    for (i = 0; i < e_list->e; i++){
+        buck[e_list->edges[i].t] = e_list->edges[i];
+    }
+    
+    j=0;
+    for (i = 1; i < e_list->n+1; i++){
+        if(buck[i].t != 0){
+            e_list->edges[j] = buck[i];
+            j++;
+        }
+    }
+    free(buck);
+}
+
+void free_fifo(fifo* f){
+    free(f->value);
+    free(f);
 }
 

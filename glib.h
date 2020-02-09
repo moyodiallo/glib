@@ -11,7 +11,10 @@ typedef struct {
 	unsigned long t;
 } edge;
 
-/*edge list structure:*/
+/**
+ * edge list structure:
+ * node id start in 1
+*/
 typedef struct edgelist{
 	unsigned long n;        /*number of nodes (properly the maximum id)*/
 	unsigned long e;        /*number of edges*/
@@ -19,7 +22,14 @@ typedef struct edgelist{
     char directed;        /*1 if directed else 1*/
 } edgelist;
 
-/*edge list structure:*/
+edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, char directed);
+void sort_by_source(edgelist*);
+void sort_by_target(edgelist*);
+
+/**
+ * edge list structure:
+ * node id begin start in 1
+*/
 typedef struct adjlist{
     unsigned long n;        /*number of nodes (properly the maximum id)*/
 	unsigned long e;        /*number of edges*/
@@ -27,6 +37,8 @@ typedef struct adjlist{
     unsigned long *cd;      /*cumulative degree cd[0]=0 length=n+1*/
 	unsigned long *adj;     /*concatenated lists of neighbors of all nodes*/
 } adjlist;
+
+adjlist*   make_adjlist_edges(edgelist*);
 
 /*
 	edge list structure:
@@ -39,17 +51,7 @@ typedef struct adjmatrix{
 	char* mat;              /*adjacency matrix*/
 } adjmatrix;
 
-/*build from file*/
-edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, char directed);
-
-/*build from edges list*/
-adjlist*   make_adjlist_edges(edgelist*);
 adjmatrix* make_adjmatrix_edges(edgelist*);
-
-/*
-	build from edges list by sorting neighbors nodes
-*/
-adjlist*   make_adjlist_edges_sort(edgelist*);
 
 /*
 	generate a graph with 4 cluster
@@ -60,6 +62,15 @@ adjlist*   make_adjlist_edges_sort(edgelist*);
 */
 void generate4clusters(unsigned long n_of_nodes, double p, double q);
 
+/*
+	return number of neighbor
+*/
+unsigned long n_of_neighbor(adjlist*, unsigned long n);
+
+/*
+	for shuffling a vector
+*/
+void shuffle_random(unsigned long* vector, unsigned long size);
 
 /*
 	free the structures
@@ -76,8 +87,16 @@ void free_adjmatrix(adjmatrix*);
 couple n_of_graph(char*);
 
 /*
-	
+	label propagation algorithme
+	label 0 is not assigned
+	n times 
 */
+unsigned long* label_propagation(adjlist*, int n);
+
+/**
+ * Sort edgelist by which position
+ */
+edgelist* sort_edgelist(edgelist*, int pos);
 
 /*
 	printing for testing little graphs
@@ -85,5 +104,29 @@ couple n_of_graph(char*);
 void print_adjlist(adjlist*);
 void print_edgelsit(edgelist*);
 void print_n_of_graph(char*);
+
+/**
+ * 	random int (min,max)
+ */
+int random_int(int min, int max);
+
+
+/**
+ * A fifo
+ * When pop return 0 if empty
+ * if f_full = 1 so the tab have been full at least once
+ */
+typedef struct fifo{
+	int i;
+	int j;
+	unsigned long size;
+	unsigned long* value;
+}fifo;
+
+fifo* make_fifo(unsigned long size);
+unsigned long pop_fifo(fifo*);
+void push_fifo(fifo*, unsigned long val);
+void free_fifo(fifo*);
+int is_full_fifo(fifo*);
 
 #endif
