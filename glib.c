@@ -342,48 +342,76 @@ void push_fifo(fifo* f, unsigned long val){
     f->i = f->i % f->size;
 }
 
-void sort_by_source(edgelist* e_list){
-    unsigned long i,j;
-    
-    edge* buck = malloc((e_list->n+1)*sizeof(edge));
-    for (i = 0; i < e_list->e; i++){
-        buck[ e_list->edges[i].s ] = e_list->edges[i];
-    }
-    
-    j = 0;
-    for (i = 1; i < e_list->n+1; i++){
-        if(buck[i].s != 0){
-            e_list->edges[j] = buck[i];
-            j++;
-            printf("%lu\n",j);
-        }
-
-        if(j == e_list->e) 
-            break;
-    }
-    free(buck);
-}
-
-void sort_by_target(edgelist* e_list){
-    unsigned long i,j;
-    
-    edge* buck = malloc((e_list->n+1)*sizeof(edge));
-    for (i = 0; i < e_list->e; i++){
-        buck[e_list->edges[i].t] = e_list->edges[i];
-    }
-    
-    j=0;
-    for (i = 1; i < e_list->n+1; i++){
-        if(buck[i].t != 0){
-            e_list->edges[j] = buck[i];
-            j++;
-        }
-    }
-    free(buck);
-}
-
 void free_fifo(fifo* f){
     free(f->value);
     free(f);
+}
+
+void direct_by_deg(edgelist* e_list){
+    unsigned long i,n;
+    unsigned long* d = calloc(e_list->n+1,sizeof(unsigned long));
+    for (i = 0; i < e_list->e; i++){
+        d[e_list->edges[i].s]++;
+        d[e_list->edges[i].t]++;
+    }
+
+    for (i = 0; i < e_list->e; i++){
+        if( d[e_list->edges[i].s] > d[e_list->edges[i].t])
+        {
+            n = e_list->edges[i].s;
+            e_list->edges[i].s = e_list->edges[i].t;
+            e_list->edges[i].t = n;
+        }else if( d[e_list->edges[i].s] ==  d[e_list->edges[i].t])
+        {
+            if(e_list->edges[i].s > e_list->edges[i].t){
+                n = e_list->edges[i].s;
+                e_list->edges[i].s = e_list->edges[i].t;
+                e_list->edges[i].t = n;
+            }
+        }
+    }
+}
+
+unsigned long compute_triangle(adjlist* adj_list, int status){
+    unsigned long i,j,count,i_1,i_2,l_1,l_2;
+    triangle tri;
+    count = 0;
+    for (i = 1; i < adj_list->n; i++)
+    {
+        /*find triangle*/
+        for (j = adj_list->cd[i-1]; j < adj_list->cd[i]; j++)
+        {
+            tri.p_1 = i;
+            tri.p_2 = adj_list->adj[j];
+
+            if(n_of_neighbor(adj_list,tri.p_2) == 0) continue;
+
+            /*find third node*/
+            i_1 = adj_list->cd[tri.p_1-1];
+            i_2 = adj_list->cd[tri.p_2-1];
+
+            l_1 = adj_list->cd[tri.p_1];
+            l_2 = adj_list->cd[tri.p_2];
+
+            while (i_1 < l_1 && i_2 < l_2)
+            {
+                /*printf(" -> %lu %lu %lu %lu\n",tri.p_1, tri.p_2, adj_list->adj[i_1], adj_list->adj[i_2]);*/
+                if(adj_list->adj[i_1] < adj_list->adj[i_2]){
+                    i_1++;
+                }else if(adj_list->adj[i_1] > adj_list->adj[i_2]){
+                    i_2++;
+                }else if(adj_list->adj[i_1] == adj_list->adj[i_2]){
+                    tri.p_3 = adj_list->adj[i_1];
+                    i_1++;
+                    i_2++;
+                    count++;
+                    if(status){
+                        printf("%lu %lu %lu\n",tri.p_1, tri.p_2, tri.p_3);
+                    }
+                }
+            }
+        }      
+    }
+    return count;
 }
 

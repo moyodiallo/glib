@@ -6,6 +6,12 @@ typedef struct {
 	unsigned long y;
 } couple;
 
+typedef struct triangle{
+	unsigned long p_1;
+	unsigned long p_2;
+	unsigned long p_3;
+}triangle;
+
 typedef struct {
 	unsigned long s;
 	unsigned long t;
@@ -23,8 +29,6 @@ typedef struct edgelist{
 } edgelist;
 
 edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, char directed);
-void sort_by_source(edgelist*);
-void sort_by_target(edgelist*);
 
 /**
  * edge list structure:
@@ -93,11 +97,6 @@ couple n_of_graph(char*);
 */
 unsigned long* label_propagation(adjlist*, int n);
 
-/**
- * Sort edgelist by which position
- */
-edgelist* sort_edgelist(edgelist*, int pos);
-
 /*
 	printing for testing little graphs
 */
@@ -109,6 +108,12 @@ void print_n_of_graph(char*);
  * 	random int (min,max)
  */
 int random_int(int min, int max);
+
+
+/**
+ * direct the edges by minimum deg
+ */
+void direct_by_deg(edgelist*);
 
 
 /**
@@ -128,5 +133,14 @@ unsigned long pop_fifo(fifo*);
 void push_fifo(fifo*, unsigned long val);
 void free_fifo(fifo*);
 int is_full_fifo(fifo*);
+
+/**
+ * Compute triangle of adjacency list
+ * status :
+ * 		1 -> print
+ * 		0 -> no print
+ * 	return the number of triangles
+ */
+unsigned long compute_triangle(adjlist*, int print);
 
 #endif
