@@ -415,3 +415,7 @@ unsigned long compute_triangle(adjlist* adj_list, int status){
     return count;
 }
 
+unsigned long* connected(adjlist* adj_list, int print){
+
+}
+

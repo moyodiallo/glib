@@ -1,3 +1,8 @@
+/**
+ * @brief 
+ * 
+ */
+
 #ifndef _GLIB_H_
 #define _GLIB_H_
 
@@ -135,12 +140,31 @@ void free_fifo(fifo*);
 int is_full_fifo(fifo*);
 
 /**
- * Compute triangle of adjacency list
+ * @brief Compute triangle of adjacency list
  * status :
  * 		1 -> print
  * 		0 -> no print
  * 	return the number of triangles
  */
 unsigned long compute_triangle(adjlist*, int print);
+
+
+/**
+ * @brief compute connected component
+ * 
+ */
+unsigned long* connected(adjlist*, int print);
+
+/**
+ * @brief compute the diameter of the good bound
+ * 
+ */
+unsigned long* diameter(adjlist*, int print);
+
+/**
+ * @brief page Rank
+ * 
+ */
+unsigned long* page_rank(edgelist*,unsigned long size,int print);
 
 #endif
