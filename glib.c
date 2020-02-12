@@ -323,9 +323,19 @@ int is_full_fifo(fifo* f){
         return 0;
 }
 
+int is_empty_fifo(fifo* f){
+    if(f->i == f->j) 
+        return 1;
+    else 
+        return 0;
+}
+
 unsigned long pop_fifo(fifo* f){
     unsigned long p;
-    if(f->j == f->i) return 0;
+    if(is_empty_fifo(f) == 1){
+        printf("fail: fifo is empty");
+        exit(EXIT_FAILURE);
+    }
     p = f->value[f->j];
     f->j++;
     f->j = f->j % f->size;
@@ -415,7 +425,103 @@ unsigned long compute_triangle(adjlist* adj_list, int status){
     return count;
 }
 
-unsigned long* connected(adjlist* adj_list, int print){
+unsigned long bfs(adjlist* adj_list, unsigned long s, unsigned long* mark, unsigned long color, int print){
+    unsigned long j,ng, size;
+    fifo* f = make_fifo(adj_list->n);
 
+    push_fifo(f,s);
+    mark[s] = color;
+    size     = 0;
+    while (is_empty_fifo(f) == 0)
+    {
+        unsigned long n = pop_fifo(f);
+        size += 1;
+
+        if(print == 1){
+            printf("%lu ",n);
+        }
+
+        for (j = adj_list->cd[n-1]; j < adj_list->cd[n]; j++){
+
+            ng = adj_list->adj[j];
+            if(mark[ng] == 0){
+                mark[ng]  = color;
+                push_fifo(f,ng);
+            }
+        }
+    }
+    free_fifo(f);
+    return size;
 }
 
+void connected(adjlist* adj_list, int print){
+    unsigned long i, c, size, max, node;
+    unsigned long* mark  = calloc(adj_list->n+1,sizeof(unsigned long)); 
+
+    c = 1;
+    max = 0;
+    for (i = 1; i < adj_list->n+1; i++)
+    {
+        if(mark[i] == 0 && n_of_neighbor(adj_list,i) > 0){
+            size = bfs(adj_list,i,mark,c,print);
+            if(print == 1){
+                printf("\n");
+            }
+            if(print == 2){
+                printf("%lu %lu\n",c,size);
+            }
+            c++;
+        }
+
+        if(max < size) {
+            max  = size;
+            node = i;
+        }
+    }
+
+    if(print == 3){
+        printf("%lu %lu\n",size,node);
+    } 
+    free(mark);
+}
+
+unsigned long diameter(adjlist* adj_list, unsigned long s, int print){
+    /*
+   unsigned long j,ng, size, diameter;
+    unsigned long* level = calloc((adj_list->n+1) ,sizeof(unsigned long));
+    fifo* f = make_fifo(adj_list->n);
+    couple cp;
+
+    push_fifo(f,s);
+    level[s] = 1;
+    size     = 1;
+    while (is_empty_fifo(f) == 0)
+    {
+        unsigned long n = pop_fifo(f);
+
+        for (j = adj_list->cd[n-1]; j < adj_list->cd[n]; j++){
+
+            ng = adj_list->adj[j];
+            if(mark[ng] == 0){
+                mark[ng]  = color;
+                push_fifo(f,ng);
+                level[ng] = level[n] + 1;
+                size += 1;
+            }
+        }
+    }
+
+    diameter = 0;
+    for ( j = 1; j < adj_list->n+1; j++)
+    {
+        if(diameter < level[j]){
+            diameter = level[j];
+        }
+    }
+
+    cp.x = size;
+    cp.y = diameter;
+    free(level);
+    return cp;
+    */
+}

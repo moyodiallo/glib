@@ -2,7 +2,7 @@ CC      = gcc -g
 CFLAGS  = -W -Wall -ansi -pedantic
 LDFLAGS = -std=c11 -O3
 EXEC    = norm test n_of_graph norm_inc print_test gen_graph \
-           label shuffle fifo direct_by_deg triangle
+           label shuffle fifo direct_by_deg triangle connected
 
 all: $(EXEC)
 
@@ -17,6 +17,7 @@ label      : glib.o
 shuffle    : glib.o
 fifo       : glib.o
 triangle   : glib.o
+connected  : glib.o
 
 direct_by_deg : glib.o
 

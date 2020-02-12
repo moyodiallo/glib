@@ -138,6 +138,7 @@ unsigned long pop_fifo(fifo*);
 void push_fifo(fifo*, unsigned long val);
 void free_fifo(fifo*);
 int is_full_fifo(fifo*);
+int is_empty_fifo(fifo*);
 
 /**
  * @brief Compute triangle of adjacency list
@@ -148,18 +149,29 @@ int is_full_fifo(fifo*);
  */
 unsigned long compute_triangle(adjlist*, int print);
 
+/** 
+ * @brief bfs breath-first-search
+ * \fn
+ * \param adjlist
+ * \param s source of the walk
+ * \param mark mark when the is reached
+ * \param c the color for this walk
+ * 
+ * \return a couple (size,the lower bound)
+ */
+unsigned long bfs(adjlist*, unsigned long s, unsigned long* mark, unsigned long c, int print);
 
 /**
  * @brief compute connected component
  * 
  */
-unsigned long* connected(adjlist*, int print);
+void connected(adjlist*, int print);
 
 /**
  * @brief compute the diameter of the good bound
  * 
  */
-unsigned long* diameter(adjlist*, int print);
+unsigned long diameter(adjlist*, unsigned long s, int print);
 
 /**
  * @brief page Rank
