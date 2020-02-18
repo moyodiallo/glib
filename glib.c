@@ -154,19 +154,20 @@ adjmatrix* make_adjmatrix_edges(edgelist* e_list){
     return adj_mat;
 }
 
-void generate4clusters(unsigned long n_of_nodes, double p, double q){
-    unsigned long i,j,n;
+void generate_clusters(unsigned long n_of_nodes, unsigned long n_of_cluster, double p, double q){
+    unsigned long i,j,n,n_per_cluster;
     char* clusters = malloc(sizeof(char)*(n_of_nodes+1));
     double r;
 
     n = 1;
     j = 0;
+    n_per_cluster = n_of_nodes / n_of_cluster;
     /*giving the node's cluster id */
     for (i = 1; i < n_of_nodes+1; i++)
     {
         clusters[i] = n;
         j++;
-        if(j == 100){
+        if(j == n_per_cluster){
             j = 0;
             n++;
         }
@@ -176,7 +177,7 @@ void generate4clusters(unsigned long n_of_nodes, double p, double q){
      srand(time(0));
     for (i = 1; i < n_of_nodes+1; i++)
     {
-        for ( j = i; j < n_of_nodes+1; j++)
+        for ( j = i+1; j < n_of_nodes+1; j++)
         {
             r = ((double)rand() / (double)((unsigned)RAND_MAX + 1));
             if ( r <= p && clusters[i] == clusters[j] ){
@@ -226,22 +227,15 @@ unsigned long* label_propagation(adjlist* adj_list, int times){
     change = 1;
     for (i = 0; i < (unsigned long)times; i++){
         shuffle_random(nd,adj_list->n);
-
-        /*
-        for (i=1; i < adj_list->n+1; i++)
-        {
-            printf("%lu\n", nd[i]);
-        }
-        exit(EXIT_FAILURE);
-        */
         
         for ( j = 1; j < adj_list->n+1; j++){
             node  = 0;
             max   = 0;
             n     = nd[j]; /*the node shuffled*/
             
-
+            
             if(n == 0) continue; /*this node have not to exist*/
+            
 
             cu[lb[n]] = 0; /*for counting label localy*/
             for (t = adj_list->cd[n-1]; t < adj_list->cd[n]; t++){
@@ -436,11 +430,9 @@ unsigned long bfs(adjlist* adj_list, unsigned long s, unsigned long* mark, unsig
     {
         unsigned long n = pop_fifo(f);
         size += 1;
-
         if(print == 1){
             printf("%lu ",n);
         }
-
         for (j = adj_list->cd[n-1]; j < adj_list->cd[n]; j++){
 
             ng = adj_list->adj[j];
@@ -450,6 +442,7 @@ unsigned long bfs(adjlist* adj_list, unsigned long s, unsigned long* mark, unsig
             }
         }
     }
+
     free_fifo(f);
     return size;
 }
@@ -482,46 +475,173 @@ void connected(adjlist* adj_list, int print){
     if(print == 3){
         printf("%lu %lu\n",size,node);
     } 
+
     free(mark);
 }
 
-unsigned long diameter(adjlist* adj_list, unsigned long s, int print){
-    /*
-   unsigned long j,ng, size, diameter;
-    unsigned long* level = calloc((adj_list->n+1) ,sizeof(unsigned long));
+couple bfs2(adjlist* adj_list, unsigned long s){
+    unsigned long j, ng, n;
     fifo* f = make_fifo(adj_list->n);
+    unsigned long* mark  = calloc(adj_list->n+1,sizeof(unsigned long));
+    unsigned long* level = malloc((adj_list->n+1)*sizeof(unsigned long));
     couple cp;
 
     push_fifo(f,s);
-    level[s] = 1;
-    size     = 1;
+    mark[s]  = 1;
+    level[s] = 0;
     while (is_empty_fifo(f) == 0)
     {
-        unsigned long n = pop_fifo(f);
-
+        n = pop_fifo(f);
         for (j = adj_list->cd[n-1]; j < adj_list->cd[n]; j++){
-
             ng = adj_list->adj[j];
             if(mark[ng] == 0){
-                mark[ng]  = color;
+                mark[ng] = 1;
                 push_fifo(f,ng);
-                level[ng] = level[n] + 1;
-                size += 1;
+                level[ng] = level[n] + 1; 
+            }
+        }
+    }    
+
+    cp.x = level[n];
+    cp.y = n;
+
+    free(mark);
+    free_fifo(f);
+    free(level);
+    return cp;
+}
+
+unsigned long diameter(adjlist* adj_list, unsigned long s){
+    couple cp;
+    unsigned long i;
+    unsigned long diam = 0;
+    unsigned long node = s;
+
+    for (i = 0; i < 10; i++)
+    { 
+        cp = bfs2(adj_list,node);
+        if(diam < cp.x){
+            node = cp.y;
+            diam = cp.x;
+        }else if(diam == cp.x){
+            break;
+        }
+    }
+    return diam;
+}
+
+void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1){
+    unsigned long i;
+    for (i = 1; i < size+1; i++)
+    {
+        P[i]+= (1- P_1)/((double)nodes);
+    }
+}
+
+double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int trace){
+    unsigned long i,j, P_1;
+    double som, nodes = 0;
+
+    double* d_out, *T, *P, *P_N;
+    int* exist;
+
+    /*printf("dout\n");*/
+    /*calcul D_out*/
+    d_out = calloc(e_list_direct->n+1,sizeof(double));
+    exist = calloc(e_list_direct->n+1,sizeof(int));
+    for (i = 0; i < e_list_direct->e; i++)
+    {
+        d_out[e_list_direct->edges[i].s]++;
+        exist[e_list_direct->edges[i].s] = 1;
+        exist[e_list_direct->edges[i].t] = 1;
+    }
+
+    /*printf("count node\n");*/
+    /*count nodes*/
+    for (i = 1; i < e_list_direct->n+1; i++)
+    {
+        if(exist[i] != 0){
+            nodes++;
+        }
+    }
+    /*free(exist)*/;
+
+    /*printf("matrix\n");*/
+    /* transition matrix */
+    T = calloc(e_list_direct->e,sizeof(double));
+    for ( j = 0; j < e_list_direct->e; j++)
+    {
+        if(d_out[e_list_direct->edges[j].s] != 0){
+            T[j] = 1/(d_out[e_list_direct->edges[j].s]);
+        }else
+        {
+            T[j] = 1/(nodes);
+        }
+    }
+    free(d_out);
+
+    /*printf("P initialize\n");*/
+    /*intitalize P*/
+    P = malloc((e_list_direct->n+1)*sizeof(double));
+    for (i = 1; i < e_list_direct->n+1; i++)
+    {
+        if(exist[i] == 1)
+            P[i] = 1/(nodes);
+        else
+            P[i] = 0;
+    }
+    free(exist);
+    
+
+    /*printf("Ranking\n");*/
+    /*Ranking*/
+    for (j = 0; j < theta; j++){
+        P_N = P;
+        P   = prod_mat_vect3(e_list_direct,T,P);
+        P_1 = 0;
+        for (i = 1; i < e_list_direct->n+1; i++)
+        {
+            P[i] = (1-alpha)*P[i] + alpha/(nodes);
+            P_1 += P[i];
+        }
+        normalize2(P,nodes,e_list_direct->n,P_1);
+
+        som=0;
+        if(trace == 1){
+            if(equals_P(P,P_N,e_list_direct->n,&som) == 1){
+                printf("STABLE AT %lu AND TOTAL RANK %f\n",j,som);
+                free(P_N);
+                break;
+            }else
+            {
+                free(P_N);
             }
         }
     }
+    if(trace == 1) printf("iterations: %lu som= %f\n",j,som);
+    return P;
+}
 
-    diameter = 0;
-    for ( j = 1; j < adj_list->n+1; j++)
+int equals_P(double* P, double* P_N, unsigned long n, double* som){
+    unsigned long i;
+    for (i = 1; i < n+1; i++)
     {
-        if(diameter < level[j]){
-            diameter = level[j];
+        *som = *som + P[i];
+        if(P[i] != 0 && P[i] != P_N[i]){
+                return 0;
         }
     }
+    return 1;
+}
 
-    cp.x = size;
-    cp.y = diameter;
-    free(level);
-    return cp;
-    */
+
+double* prod_mat_vect3(edgelist* e_list, double* T, double* P){
+    unsigned long i;
+
+    double* B = calloc(e_list->n+1,sizeof(double*));
+
+    for (i = 0; i < e_list->e; i++){
+        B[e_list->edges[i].t] += (T[i] * P[e_list->edges[i].s]);
+    }
+    return B;
 }

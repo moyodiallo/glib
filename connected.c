@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv){
     if (argc != 5){
-        printf("fail: cmd <file> <n_of_node> <p or s or m>");
+        printf("fail: cmd <file> <n_of_node> <n_of_edge> <p or s or m>");
         exit(EXIT_FAILURE);
     }
 

@@ -38,7 +38,7 @@ m = print the size of big connected component and a node of this component
 ```
 
 ## Compute the good bound diameter of the big component
-This compute the good bound diameter of a graph, like known a graph can have many 
+Compute the good lower bound diameter of a graph, like known a graph can have many 
 connected components
 ```
 p = print the diameter of each connected component
@@ -67,11 +67,35 @@ for testing your algorithm.
 
 ### Clusters generating
 
+Generate clusters and for each link (u,v), node u and node v in the same cluster with
+have a link with probability p and not with the probability q. Probability ([0.0-1.0])
+
++ n_of_node    : min 100 nodes
++ n_of_cluster : max 10 clusters
+
+```
+./cluster <n_of_node> <n_of_group> <p> <q>
+
+Example:
+./cluster 400 4 0.6 0.005 > clusters0.txt
+```
+
+
 ### Using label propagation
 
 ### Using 3-clique
 
 ### Page Rank
+Page Rank implemented
 
+p = print (node,page_rank value)
+i = print (page_rank,deg_in of page) 
+o = print (page_rank,deg_out of page)
+n = print the 5 ranked page (page id,page_rank)
+t = print iterations before stabilisation
+
+```
+./page_rank <file> <n_of_edge> <n_of_edge> <alpha> <theta> <p,i,o,or n>
+```
 
 ## Benchmarks

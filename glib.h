@@ -69,7 +69,7 @@ adjmatrix* make_adjmatrix_edges(edgelist*);
 	the graph is printed
 	the probability is between [0-1]
 */
-void generate4clusters(unsigned long n_of_nodes, double p, double q);
+void generate_clusters(unsigned long n_of_nodes, unsigned long n_of_cluster, double p, double q);
 
 /*
 	return number of neighbor
@@ -171,12 +171,47 @@ void connected(adjlist*, int print);
  * @brief compute the diameter of the good bound
  * 
  */
-unsigned long diameter(adjlist*, unsigned long s, int print);
+unsigned long diameter(adjlist*, unsigned long s);
+
 
 /**
- * @brief page Rank
+ * @brief 
  * 
+ * @param alpha 
+ * @param theta 
+ * @param nodes 
+ * @return double* 
  */
-unsigned long* page_rank(edgelist*,unsigned long size,int print);
+double* page_rank(edgelist*, double alpha, unsigned theta, int trace);
+
+/**
+ * @brief 
+ * 
+ * @param e_list 
+ * @param T 
+ * @param P 
+ * @return double* 
+ */
+double* prod_mat_vect3(edgelist* e_list, double* T, double* P);
+
+/**
+ * @brief 
+ * 
+ * @param P 
+ * @param nodes 
+ * @param size 
+ */
+void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1);
+
+/**
+ * @brief 
+ * 
+ * @param P 
+ * @param P_N 
+ * @param n 
+ * @param som 
+ * @return int 
+ */
+int equals_P(double* P, double* P_N, unsigned long n, double* som);
 
 #endif
