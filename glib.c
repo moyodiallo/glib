@@ -458,22 +458,22 @@ unsigned long bfs(adjlist* adj_list, unsigned long s, unsigned long* mark, unsig
 }
 
 void connected(adjlist* adj_list, int print){
-    unsigned long i, c, size, max, node;
+    unsigned long i, color, size, max, node;
     unsigned long* mark  = calloc(adj_list->n+1,sizeof(unsigned long)); 
 
-    c = 1;
+    color = 1;
     max = 0;
     for (i = 1; i < adj_list->n+1; i++)
     {
         if(mark[i] == 0 && n_of_neighbor(adj_list,i) > 0){
-            size = bfs(adj_list,i,mark,c,print);
+            size = bfs(adj_list,i,mark,color,print);
             if(print == 1){
                 printf("\n");
             }
             if(print == 2){
-                printf("%lu %lu\n",c,size);
+                printf("%lu %lu\n",color,size);
             }
-            c++;
+            color++;
         }
 
         if(max < size) {
@@ -483,8 +483,8 @@ void connected(adjlist* adj_list, int print){
     }
 
     if(print == 3){
-        printf("%lu %lu\n",size,node);
-    } 
+        printf("big size=%lu a_node=%lu\ntotal_component=%lu",size,node,color);
+    }
 
     free(mark);
 }
@@ -643,7 +643,7 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
     */
     
 
-    if(trace == 1) printf("iterations: %lu | total rank %lf\n",j,som);
+    if(trace == 1) printf("iterations: %lu | total rank %f\n",j,som);
     return P;
 }
 
