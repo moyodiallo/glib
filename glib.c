@@ -132,7 +132,7 @@ adjlist*   make_adjlist_edges(edgelist* e_list){
 adjmatrix* make_adjmatrix_edges(edgelist* e_list){
     unsigned long i,u,v;
     adjmatrix* adj_mat = malloc(sizeof(adjmatrix));
-	adj_mat->mat = calloc(e_list->n*e_list->n,sizeof(char));
+	adj_mat->mat = calloc((e_list->n+1)*(e_list->n+1),sizeof(char));
 
     adj_mat->e = e_list->e;
     adj_mat->n = e_list->n;
@@ -530,25 +530,19 @@ unsigned long diameter(adjlist* adj_list, unsigned long s){
     return diam;
 }
 
-void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1){
-    unsigned long i;
-    for (i = 1; i < size+1; i++)
-    {
-        P[i]+= (1- P_1)/((double)nodes);
-    }
-}
-
 double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int trace){
-    unsigned long i,j, P_1;
-    double som, nodes = 0;
+    unsigned long i,j;
+    double som ,P_1, nodes = 0;
 
     double* d_out, *T, *P, *P_N;
-    int* exist;
+    char* exist;
 
     /*printf("dout\n");*/
     /*calcul D_out*/
     d_out = calloc(e_list_direct->n+1,sizeof(double));
-    exist = calloc(e_list_direct->n+1,sizeof(int));
+    exist = calloc(e_list_direct->n+1,sizeof(char));
+    
+
     for (i = 0; i < e_list_direct->e; i++)
     {
         d_out[e_list_direct->edges[i].s]++;
@@ -569,7 +563,7 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
     /*printf("matrix\n");*/
     /* transition matrix */
     T = calloc(e_list_direct->e,sizeof(double));
-    for ( j = 0; j < e_list_direct->e; j++)
+    for (j = 0; j < e_list_direct->e; j++)
     {
         if(d_out[e_list_direct->edges[j].s] != 0){
             T[j] = 1/(d_out[e_list_direct->edges[j].s]);
@@ -591,44 +585,74 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
             P[i] = 0;
     }
     free(exist);
-    
 
     /*printf("Ranking\n");*/
     /*Ranking*/
     for (j = 0; j < theta; j++){
+
         P_N = P;
         P   = prod_mat_vect3(e_list_direct,T,P);
         P_1 = 0;
-        for (i = 1; i < e_list_direct->n+1; i++)
-        {
-            P[i] = (1-alpha)*P[i] + alpha/(nodes);
-            P_1 += P[i];
+        for (i = 1; i < e_list_direct->n+1; i++){
+            if(P[i] != 0){
+                P[i] = ((1-alpha)*P[i]) + (alpha/(nodes));
+                P_1  = P_1 + P[i];
+            }
         }
         normalize2(P,nodes,e_list_direct->n,P_1);
 
-        som=0;
+        som =0;
+        for (i = 0; i < e_list_direct->n+1; i++){
+            som += P[i];
+        }
+        
+        /*
         if(trace == 1){
-            if(equals_P(P,P_N,e_list_direct->n,&som) == 1){
+            if(equals_P(P,P_N,e_list_direct->n) == 1){
                 printf("STABLE AT %lu AND TOTAL RANK %f\n",j,som);
                 free(P_N);
                 break;
-            }else
-            {
+            }else{
                 free(P_N);
             }
         }
+        */
+        
     }
-    if(trace == 1) printf("iterations: %lu som= %f\n",j,som);
+
+    /*
+    printf("finish\n");
+    for (i = 1; i < 20; i++)
+    {
+        if(((P[i]*100)) != ((P_N[i]*100)))
+            printf("N %lu %lf %lf\n",i,P[i]*100,P_N[i]*100);
+        else 
+            printf("Y %lu %lf %lf\n",i,P[i]*100,P_N[i]*100);
+
+    }
+    */
+    
+
+    if(trace == 1) printf("iterations: %lu | total rank %lf\n",j,som);
     return P;
 }
 
-int equals_P(double* P, double* P_N, unsigned long n, double* som){
+
+void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1){
     unsigned long i;
-    for (i = 1; i < n+1; i++)
-    {
-        *som = *som + P[i];
-        if(P[i] != 0 && P[i] != P_N[i]){
-                return 0;
+    for (i = 1; i < size+1; i++){
+        if(P[i] != 0)
+            P[i] = P[i] + ((1 - P_1)/((double)nodes));
+    }
+}
+
+int equals_P(double* P, double* P_N, unsigned long n){
+    unsigned long i;
+    for (i = 1; i < n+1; i++){
+        if(P[i] != 0){
+            if(P[i] != P_N[i]){
+                    return 0;
+            }
         }
     }
     return 1;

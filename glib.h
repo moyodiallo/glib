@@ -200,6 +200,7 @@ double* prod_mat_vect3(edgelist* e_list, double* T, double* P);
  * @param P 
  * @param nodes 
  * @param size 
+ * @param P_1 
  */
 void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1);
 
@@ -209,9 +210,8 @@ void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1);
  * @param P 
  * @param P_N 
  * @param n 
- * @param som 
  * @return int 
  */
-int equals_P(double* P, double* P_N, unsigned long n, double* som);
+int equals_P(double* P, double* P_N, unsigned long n);
 
 #endif

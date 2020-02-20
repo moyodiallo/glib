@@ -40,23 +40,19 @@ int main(int argc, char** argv){
     }
 
     if(argv[6][0] == 'n' || argv[6][0] == 't'){
-        for ( j = 0; j < 10; j++)
+        for ( j = 0; j < 20; j++)
         {
             max = 0;
-            for (i = 0; i < e_list->e; i++)
+
+            for (i = 1; i < e_list->n+1; i++)
             {
-                if(max < rank[ e_list->edges[i].s ]){
-                    max  = rank[ e_list->edges[i].s ];
-                    node = e_list->edges[i].s;
+                if(max < rank[i]){
+                    node = i;
+                    max  = rank[i]; 
                 }
-
-                if(max < rank[ e_list->edges[i].t ]){
-                    max  = rank[ e_list->edges[i].t ];
-                    node = e_list->edges[i].t;
-                }
-            } 
-
-            printf("%lu %f\n",node,rank[node]);
+            }
+            
+            printf("%lu %lf\n",node,rank[node]);
             rank[node] = 0;
         }
     }
