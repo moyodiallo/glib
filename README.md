@@ -52,13 +52,19 @@ n = print the diameter of good lower bound
 To compute triangles, you have follow execute some commands before(Preparing the graph)
 
 ### Preparing the graph
+For the results to be true, you have to prepare the file.
 ```
-
+./direct_by_deg <file_orignal> <n_of_node> <n_of_edges> > <file_directed>
+sort -n k2 <file_directed> > <file_directed_sorted>
 ```
 
 ### computing triangle
+After file prepared, you can compute triangles.
 ```
-./triangle <file>
+p = print all triangles
+n = print the number of triangles
+
+./triangle <file_directed_sorted> <n_of_node> <n_of_edge> <p or n>
 ```
 
 ## Compute communauties
@@ -92,8 +98,8 @@ Page Rank implemented
 p = print (node,page_rank value)
 i = print (page_rank,deg_in of page) 
 o = print (page_rank,deg_out of page)
-n = print the 5 ranked page (page id,page_rank)
-t = print iterations before stabilisation
+n = print the 20 ranked page (page id,page_rank)
+t = print iterations
 
 ```
 ./page_rank <file> <n_of_edge> <n_of_edge> <alpha> <theta> <p,i,o,or n>
