@@ -483,7 +483,7 @@ void connected(adjlist* adj_list, int print){
     }
 
     if(print == 3){
-        printf("big size=%lu a_node=%lu\ntotal_component=%lu\n",size,node,color);
+        printf("big component size=%lu a_node=%lu\ntotal_component=%lu\n",max,node,color);
     }
 
     free(mark);
