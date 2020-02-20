@@ -1,6 +1,6 @@
 CC      = gcc -g
-CFLAGS  = -W -Wall -ansi -pedantic
-LDFLAGS = -std=c11 -O3
+CFLAGS  = -W -Wall -ansi -pedantic -std=c11
+LDFLAGS = -O3
 EXEC    = norm test n_of_graph norm_inc print_test gen_graph \
            label shuffle fifo direct_by_deg triangle connected diameter page_rank\
 		   cluster load_adjarray load_edges load_matrix
