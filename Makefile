@@ -3,7 +3,7 @@ CFLAGS  = -W -Wall -ansi -pedantic -std=c11
 LDFLAGS = -O3
 EXEC    = norm test n_of_graph norm_inc print_test gen_graph \
            label shuffle fifo direct_by_deg triangle connected diameter page_rank\
-		   cluster load_adjarray load_edges load_matrix
+		   cluster load_adjarray load_edges load_matrix real_nb_node
 
 all: $(EXEC)
 
@@ -27,6 +27,7 @@ direct_by_deg : glib.o
 load_adjarray : glib.o
 load_edges    : glib.o
 load_matrix   : glib.o
+real_nb_node  :
 
 %: %.o
 	$(CC) -o $@ $^ $(LDFLAGS)
