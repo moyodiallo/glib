@@ -461,10 +461,11 @@ void connected(adjlist* adj_list, int print){
     unsigned long i, color, size, max, node;
     unsigned long* mark  = calloc(adj_list->n+1,sizeof(unsigned long)); 
 
-    color = 1;
+    color = 0;
     max = 0;
     for (i = 1; i < adj_list->n+1; i++)
     {
+         color++;
         if(mark[i] == 0 && n_of_neighbor(adj_list,i) > 0){
             size = bfs(adj_list,i,mark,color,print);
             if(print == 1){
@@ -472,8 +473,7 @@ void connected(adjlist* adj_list, int print){
             }
             if(print == 2){
                 printf("%lu %lu\n",color,size);
-            }
-            color++;
+            }  
         }
 
         if(max < size) {
@@ -483,7 +483,7 @@ void connected(adjlist* adj_list, int print){
     }
 
     if(print == 3){
-        printf("big size=%lu a_node=%lu\ntotal_component=%lu",size,node,color);
+        printf("big size=%lu a_node=%lu\ntotal_component=%lu\n",size,node,color);
     }
 
     free(mark);
