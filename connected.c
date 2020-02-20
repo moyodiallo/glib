@@ -9,6 +9,19 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE);
     }
 
+    int print;
+    if(argv[4][0] == 'p'){
+        print = 1;
+    }else if(argv[4][0] == 's'){
+        print = 2;
+    }else if(argv[4][0] == 'm'){
+        print = 3;
+    }else
+    {
+         printf("fail: cmd <file> <n_of_node> <n_of_edge> <p or s or m>");
+         exit(EXIT_FAILURE);
+    }
+
     char* file  = argv[1]; 
 
     unsigned long n_of_node = atol(argv[2]);
@@ -19,14 +32,8 @@ int main(int argc, char** argv){
     
     free_edgelist(e_list);
 
-    if(argv[4][0] == 'p'){
-        connected(a_list,1);
-    }else if(argv[4][0] == 's'){
-        connected(a_list,2);
-    }else if(argv[4][0] == 'm'){
-        connected(a_list,3);
-    }
-
-   free_adjlist(a_list);
+    connected(a_list,print);
+    
+    free_adjlist(a_list);
 }
 
