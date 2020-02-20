@@ -11,6 +11,7 @@ int main(int argc, char** argv){
 
     unsigned long i;
     int times   = atoi(argv[1]);
+    int stop;
     char* file  = argv[2]; 
 
     unsigned long n_of_node = atoi(argv[3]);
@@ -19,7 +20,7 @@ int main(int argc, char** argv){
     edgelist* e_list = make_edgelist_file(file,n_of_node,n_of_edge,0);
     adjlist*  a_list = make_adjlist_edges(e_list);    
 
-    unsigned long* lb =  label_propagation(a_list,times);
+    unsigned long* lb =  label_propagation(a_list,times, &stop);
 
     if(argv[5][0] == 'p'){
         for(i= 1; i<e_list->n+1; i++){
@@ -27,6 +28,10 @@ int main(int argc, char** argv){
                 printf("%lu %lu\n", i, lb[i]);
             }
         }
+    }
+
+    if(argv[5][0] == 'n'){
+        printf("times= %d and stop at %d iterations",times, stop);
     }
 
    free(lb);

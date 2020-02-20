@@ -206,7 +206,7 @@ void shuffle_random(unsigned long* vector, unsigned long size){
     }
 }
 
-unsigned long* label_propagation(adjlist* adj_list, int times){
+unsigned long* label_propagation(adjlist* adj_list, int times,int* limit){
     int change;
     unsigned long i,j,t,node,max,n,ng;
     unsigned long* lb = malloc((adj_list->n+1)*sizeof(unsigned long));
@@ -223,10 +223,10 @@ unsigned long* label_propagation(adjlist* adj_list, int times){
         }
     }
 
-
-    change = 1;
     for (i = 0; i < (unsigned long)times; i++){
         shuffle_random(nd,adj_list->n);
+
+        change  = 0;
         
         for ( j = 1; j < adj_list->n+1; j++){
             node  = 0;
@@ -265,10 +265,20 @@ unsigned long* label_propagation(adjlist* adj_list, int times){
             
             if(cu[ lb[node] ] == cu[ lb[n] ]){
                 lb[n] = lb[node];
+                change = 1;
             }else if( cu[ lb[node] ] > cu[ lb[n] ]){
                 lb[n] = lb[node];
+                change = 1;
             }
         }
+
+        if(change == 0){
+            free(cu);
+            free(nd);
+            *limit = i+1;
+            return lb;
+        }
+
     }
     free(cu);
     free(nd);

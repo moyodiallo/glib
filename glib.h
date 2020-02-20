@@ -100,7 +100,7 @@ couple n_of_graph(char*);
 	label 0 is not assigned
 	n times 
 */
-unsigned long* label_propagation(adjlist*, int n);
+unsigned long* label_propagation(adjlist*, int n,int* stop);
 
 /*
 	printing for testing little graphs
