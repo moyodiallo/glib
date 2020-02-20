@@ -465,8 +465,8 @@ void connected(adjlist* adj_list, int print){
     max = 0;
     for (i = 1; i < adj_list->n+1; i++)
     {
-         color++;
         if(mark[i] == 0 && n_of_neighbor(adj_list,i) > 0){
+            color++;
             size = bfs(adj_list,i,mark,color,print);
             if(print == 1){
                 printf("\n");
