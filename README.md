@@ -30,11 +30,12 @@ n_of_edge :
 ## Compute connected components
 The algorithm used is [BFS!](https://en.wikipedia.org/wiki/Breadth-first_search)
 ```
+print_args:
 p = pint all component important for debuging
 s = print the size of each connected component
-m = print the size of big connected component and a node of this component
+m = print the size of big connected component and a node of this component and the total components
 
-./connected <file> <n_of_node> <n_of_edge> <p or n>
+./connected <file> <n_of_node> <n_of_edge> <print_args>
 ```
 
 ## Compute the good bound diameter of the big component
