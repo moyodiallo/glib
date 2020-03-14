@@ -90,18 +90,32 @@ Example:
 
 ### Using label propagation
 
+the label propagation
+[algorithm ](https://en.wikipedia.org/wiki/Label_propagation_algorithm)
+
+```
+times = number of iterations
+p     = print node with their communauty id
+n     = no print 
+./label <times> <file> <n_of_node> <n_of_edges> <p or n>
+```
+
+### Modularity 
+I recommand to use this [algorithm](https://fr.wikipedia.org/wiki/Méthode_de_Louvain) for communauty dectection.
+The source is from this link [https://sourceforge.net/projects/louvain/](https://sourceforge.net/projects/louvain/)
+
 ### Using 3-clique
 
 ### Page Rank
 Page Rank implemented
 
+```
 p = print (node,page_rank value)
-i = print (page_rank,deg_in of page) 
-o = print (page_rank,deg_out of page)
-n = print the 20 ranked page (page id,page_rank)
+i = print (node, page_rank, deg_in of page) 
+o = print (node, page_rank, deg_out of page)
+n = print the 20  ranked page (page id,page_rank)
 t = print iterations
 
-```
 ./page_rank <file> <n_of_edge> <n_of_edge> <alpha> <theta> <p,i,o,or n>
 ```
 
