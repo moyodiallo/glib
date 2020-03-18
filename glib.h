@@ -22,6 +22,33 @@ typedef struct {
 	unsigned long t;
 } edge;
 
+typedef struct heap
+{
+	unsigned long* value;
+	unsigned long size;
+	unsigned long index;
+}heap;
+
+
+heap* make_heap(unsigned long size);
+void free_heap(heap* h);
+void push_heap(heap* h, unsigned long* deg, unsigned long node, unsigned long* position);
+unsigned long pop_heap(heap* h, unsigned long* deg, unsigned long* position);
+void percolate(heap* h, unsigned long* deg, unsigned long* position);
+
+/**
+ * @brief 
+ * 
+ * @param h 
+ * @param deg 
+ * @param index 
+ * @param position the position in the heap
+ */
+void up_heap(heap *h, unsigned long *deg, unsigned long index, unsigned long *position);
+void down_heap(heap *h, unsigned long *deg, unsigned long index, unsigned long *position);
+
+
+
 /**
  * edge list structure:
  * node id start in 1
@@ -147,7 +174,7 @@ int is_empty_fifo(fifo*);
  * 		0 -> no print
  * 	return the number of triangles
  */
-unsigned long compute_triangle(adjlist*, int print);
+unsigned long compute_triangle(adjlist*, unsigned long* belongs, int print);
 
 /** 
  * @brief bfs breath-first-search
@@ -213,5 +240,43 @@ void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1);
  * @return int 
  */
 int equals_P(double* P, double* P_N, unsigned long n);
+
+/**
+ * @brief 
+ * 
+ * @param a_list 
+ * @param n_deg 
+ * @param core_node 
+ * @param num_node 
+ * @return unsigned long 
+ */
+unsigned long kcore(adjlist *a_list , unsigned long *n_deg, unsigned long *core_node, unsigned long *num_node);
+
+
+/**
+ * @brief compute communaty by triangle
+ * 
+ * @param adjlist adjacency array
+ * @return unsigned* the node with the communauty the belongs to
+ */
+unsigned* communauty_triangle(adjlist* a_list);
+
+/**
+ * @brief 
+ * 
+ * @param a_list 
+ * @param core_node 
+ * @param pref_node 
+ */
+void kcore_density(adjlist *a_list, unsigned long *core_node, unsigned long *pref_node);
+
+/**
+ * @brief 
+ * 
+ * @param e_list 
+ * @param times 
+ * @return unsigned* density_score 
+ */
+double* density_score(edgelist *e_list, int times);
 
 #endif

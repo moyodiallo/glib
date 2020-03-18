@@ -9,7 +9,7 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE);
     }
 
-    unsigned long i,j,node;
+    unsigned long i,j,node = 0;
     unsigned long* nodes;
     double* rank,max;
     char* file  = argv[1]; 
@@ -30,11 +30,10 @@ int main(int argc, char** argv){
 
 
     if(argv[6][0] == 'p'){
-        for (i = 0; i < e_list->e; i++)
+        for (i = 1; i < e_list->n; i++)
         {
             if(rank[i] != 0.0){
-                printf("%lu %f\n",i,rank[ e_list->edges[i].s ]);
-                printf("%lu %f\n",i,rank[ e_list->edges[i].t ]);
+                printf("%lu %f\n",i,rank[i]*100);
             }
         }
     }
@@ -52,7 +51,7 @@ int main(int argc, char** argv){
                 }
             }
             
-            printf("%lu %lf\n",node,rank[node]);
+            printf("%lu %f\n",node,rank[node]*100);
             rank[node] = 0;
         }
     }
@@ -65,11 +64,10 @@ int main(int argc, char** argv){
             nodes[ e_list->edges[i].t]++;
         }
 
-        for (i = 0; i < e_list->e; i++)
+        for (i = 1; i < e_list->n; i++)
         {
             if(rank[i] != 0.0){
-                printf("%lu %lu\n",i, nodes[ e_list->edges[i].s ]);
-                printf("%lu %lu\n",i, nodes[ e_list->edges[i].t ]);
+                printf("%lu %lf %lu\n",i,rank[i]*100,nodes[i]);
             }
         }
         
@@ -81,11 +79,10 @@ int main(int argc, char** argv){
             nodes[ e_list->edges[i].s]++;
         }
 
-        for (i = 0; i < e_list->e; i++)
+       for (i = 1; i < e_list->n; i++)
         {
             if(rank[i] != 0.0){
-                printf("%lu %lu\n",i,nodes[ e_list->edges[i].s ]);
-                printf("%lu %lu\n",i,nodes[ e_list->edges[i].t ]);
+                printf("%lu %lf %lu\n",i,rank[i]*100,nodes[i]);
             }
         }
     }

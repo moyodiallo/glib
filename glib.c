@@ -73,7 +73,7 @@ edgelist*  make_edgelist_file(char* input, int n_of_nodes, int n_of_edges, char 
     while (fscanf(file,"%lu %lu",&(g->edges[n].s), &(g->edges[n].t)) == 2){
         if(n == g->e) 
         {
-            printf("fail: limit of edges");
+            printf("fail: limit of edges %lu\n",n);
             exit(EXIT_FAILURE);
         }
         n++;
@@ -386,7 +386,7 @@ void direct_by_deg(edgelist* e_list){
     }
 }
 
-unsigned long compute_triangle(adjlist* adj_list, int status){
+unsigned long compute_triangle(adjlist* adj_list,unsigned long* belongs, int status){
     unsigned long i,j,count,i_1,i_2,l_1,l_2;
     triangle tri;
     count = 0;
@@ -415,13 +415,18 @@ unsigned long compute_triangle(adjlist* adj_list, int status){
                 }else if(adj_list->adj[i_1] > adj_list->adj[i_2]){
                     i_2++;
                 }else if(adj_list->adj[i_1] == adj_list->adj[i_2]){
+                    
                     tri.p_3 = adj_list->adj[i_1];
                     i_1++;
                     i_2++;
                     count++;
-                    if(status){
+                    if(status == 1){
                         printf("%lu %lu %lu\n",tri.p_1, tri.p_2, tri.p_3);
                     }
+
+                    belongs[tri.p_1]++;
+                    belongs[tri.p_2]++;
+                    belongs[tri.p_3]++;
                 }
             }
         }      
@@ -533,7 +538,7 @@ unsigned long diameter(adjlist* adj_list, unsigned long s){
         if(diam < cp.x){
             node = cp.y;
             diam = cp.x;
-        }else if(diam == cp.x){
+        }else if(node == cp.y){
             break;
         }
     }
@@ -542,14 +547,16 @@ unsigned long diameter(adjlist* adj_list, unsigned long s){
 
 double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int trace){
     unsigned long i,j;
-    double som ,P_1, nodes = 0;
+    unsigned long nodes = 0;
+    double som, P_1;
 
-    double* d_out, *T, *P, *P_N;
+    double *T, *P, *P_N;
+    unsigned long* d_out;
     char* exist;
 
     /*printf("dout\n");*/
     /*calcul D_out*/
-    d_out = calloc(e_list_direct->n+1,sizeof(double));
+    d_out = calloc(e_list_direct->n+1,sizeof(unsigned long));
     exist = calloc(e_list_direct->n+1,sizeof(char));
     
 
@@ -576,10 +583,10 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
     for (j = 0; j < e_list_direct->e; j++)
     {
         if(d_out[e_list_direct->edges[j].s] != 0){
-            T[j] = 1/(d_out[e_list_direct->edges[j].s]);
+            T[j] = 1.0/(d_out[e_list_direct->edges[j].s]);
         }else
         {
-            T[j] = 1/(nodes);
+            T[j] = 1.0/(nodes);
         }
     }
     free(d_out);
@@ -590,9 +597,9 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
     for (i = 1; i < e_list_direct->n+1; i++)
     {
         if(exist[i] == 1)
-            P[i] = 1/(nodes);
+            P[i] = 1.0/(nodes);
         else
-            P[i] = 0;
+            P[i] = 0.0;
     }
     free(exist);
 
@@ -602,7 +609,7 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
 
         P_N = P;
         P   = prod_mat_vect3(e_list_direct,T,P);
-        P_1 = 0;
+        P_1 = 0.0;
         for (i = 1; i < e_list_direct->n+1; i++){
             if(P[i] != 0){
                 P[i] = ((1-alpha)*P[i]) + (alpha/(nodes));
@@ -611,7 +618,7 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
         }
         normalize2(P,nodes,e_list_direct->n,P_1);
 
-        som =0;
+        som = 0.0;
         for (i = 0; i < e_list_direct->n+1; i++){
             som += P[i];
         }
@@ -641,6 +648,30 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
 
     }
     */
+
+   /*
+   printf("variation error %lf\n",P[3]);
+   unsigned long node;
+   double max;
+   if(trace == 1){
+        for ( j = 0; j < 20; j++)
+        {
+            max = 0;
+
+            for (i = 1; i < e_list_direct->n+1; i++)
+            {
+                if(max < P[i]){
+                    node = i;
+                    max  = P[i]; 
+                }
+            }
+            
+            printf("rank %lu %lf %lf\n",node,P[node], P[node] - P_N[node]);
+            P[node] = 0;
+        }
+    }
+    */
+
     
 
     if(trace == 1) printf("iterations: %lu | total rank %f\n",j,som);
@@ -652,7 +683,7 @@ void normalize2(double* P, unsigned long nodes, unsigned long size, double P_1){
     unsigned long i;
     for (i = 1; i < size+1; i++){
         if(P[i] != 0)
-            P[i] = P[i] + ((1 - P_1)/((double)nodes));
+            P[i] = P[i] + ((1 - P_1)/(nodes));
     }
 }
 
@@ -679,3 +710,322 @@ double* prod_mat_vect3(edgelist* e_list, double* T, double* P){
     }
     return B;
 }
+
+
+heap* make_heap(unsigned long size){
+    heap* h = malloc(sizeof(heap));
+    h->size  = size;
+    h->index = 0;
+    h->value = malloc(h->size*sizeof(unsigned long));
+    return h;
+}
+
+void free_heap(heap* h){
+    if(h != NULL){
+        if(h->value != NULL) free(h->value);
+        free(h);
+    }
+}
+
+void push_heap(heap* h, unsigned long* deg, unsigned long node, unsigned long* position){
+    if(h->index == h->size){
+        printf("fail: heap is full\n");
+        exit(EXIT_FAILURE);
+    }
+
+    h->value[h->index] = node;
+    position[h->value[h->index]] = h->index;
+    up_heap(h,deg,h->index,position);
+    h->index++;
+}
+
+unsigned long pop_heap(heap* h, unsigned long* deg, unsigned long* position){
+    unsigned long p = h->value[0];
+
+    if(h->index == 0){
+        printf("fail: heap is empty\n");
+        exit(EXIT_FAILURE);
+    }
+
+    h->value[0]  = h->value[h->index-1];
+    h->index--;
+    position[h->value[h->index-1]] = 0;
+    down_heap(h,deg,0,position);
+
+    return p;
+}
+
+void exchange(unsigned long* value,unsigned long index_1, unsigned long index_2){
+    unsigned long tmp;
+    tmp            = value[index_1];
+    value[index_1] = value[index_2];
+    value[index_2] = tmp;
+}
+
+void up_heap(heap* h, unsigned long* deg, unsigned long index,unsigned long* position){
+
+    if(index == 0){
+        return;
+    }
+
+    if(deg[h->value[index]] < deg[h->value[(index-1)/2]]){
+
+        exchange(h->value,index,(index-1)/2);
+        exchange(position,h->value[index],h->value[(index-1)/2]);
+
+        up_heap(h,deg,(index-1)/2,position);
+    }
+}
+
+
+void down_heap(heap* h, unsigned long* deg, unsigned long index, unsigned long* position){
+    unsigned long smallest = index;
+    unsigned long left     = 2*smallest+1;
+    unsigned long right    = 2*smallest+2;
+
+    if(right < h->index && deg[h->value[right]] < deg[h->value[smallest]]){
+        smallest = right;
+    }
+
+    if(left < h->index && deg[h->value[left]] < deg[h->value[smallest]]){
+        smallest = left;
+    }
+
+    if(smallest != index){
+        exchange(h->value,smallest,index);
+        exchange(position,smallest,index);
+
+        down_heap(h,deg,smallest,position);
+    }
+}
+
+void max_heapfy(heap* h, unsigned long* deg, unsigned long* position, unsigned long i){
+    unsigned long left     = 2*i+1;
+    unsigned long right    = 2*i+2;
+    unsigned long largest  = i;
+
+    if(left < h->index && deg[h->value[left]] < deg[h->value[largest]]){
+        largest = left;
+    }
+
+    if(right < h->index && deg[h->value[right]] < deg[h->value[largest]]){
+        largest = right;
+    }
+
+    if(largest != i){
+        exchange(h->value,largest,i);
+        exchange(position,h->value[largest],h->value[i]);
+        max_heapfy(h,deg,position,largest);
+    }
+}
+
+void percolate(heap* h, unsigned long* deg, unsigned long* position)
+{
+    unsigned long i = h->index/2;
+    unsigned long node_val,father,father_val;
+
+    while (i > 0)
+    {   
+        max_heapfy(h,deg,position,i);
+        i--;
+    }
+    max_heapfy(h,deg,position,0);
+}
+
+unsigned long kcore(adjlist* a_list , unsigned long* n_deg, unsigned long* core_node, unsigned long* prefix_node)
+{
+    unsigned long prefix = a_list->n;
+    unsigned long core   = 0;
+    unsigned long j,i,node,ng;
+    unsigned long* position;
+
+    unsigned long max_deg = 0;
+    
+
+    heap h;
+    h.value  = calloc(a_list->n,sizeof(unsigned long));
+    position = calloc(a_list->n+1,sizeof(unsigned long)); /*store all position in value*/
+    h.index  = 0;
+
+    for (j = 0; j < a_list->n; j++)
+    {
+        if(n_deg[j+1] != 0)
+        {
+            h.value[h.index] = j+1;
+            h.index++;
+        }
+    }
+
+    for (i = 0; i < h.index; i++)
+    {
+        position[h.value[i]] = i;
+    }
+    
+    percolate(&h,n_deg,position);
+
+    while (h.index != 0)
+    {
+        node = pop_heap(&h,n_deg,position);
+
+        if(core < n_deg[node]){
+            core = n_deg[node];
+        }
+
+        core_node[prefix]    = core;
+        prefix_node[prefix]  = node;
+        prefix--;
+
+        for (j = a_list->cd[node-1]; j < a_list->cd[node]; j++)
+        {
+            ng = a_list->adj[j];
+            if(core_node[ng] == 0){
+                n_deg[ng]--;
+                up_heap(&h,n_deg,position[ng],position);
+            }
+        }
+    }
+
+    free(h.value);
+    return core;
+}
+
+void denset_subgraph(adjlist* a_list, unsigned long* prefix_node){
+    unsigned long i,j,node;
+    unsigned long number_nodes;
+    unsigned long number_edges;
+
+    double edge_density         = 0.0;
+    double average_density      = 0.0;
+    unsigned long denset_size   = 0;
+
+    double max_edge_density         = 0.0;
+    double max_average_density      = 0.0;
+    unsigned long max_denset_size   = 0;
+
+
+
+    char* marked = calloc(a_list->n+1,sizeof(char));
+
+    for ( i = 1; i < a_list->n+1; i++)
+    {
+            marked[i] = 1;
+            node      = prefix_node[i];
+            for (j = a_list->cd[node-1]; j < a_list->cd[node]; j++)
+            {
+                if(marked[a_list->adj[j]] == 1){
+                    number_edges++;
+                }
+            }
+
+           edge_density    = ((double)number_edges) / (double)(number_nodes*(number_nodes-1))/2.0;
+           average_density = ((double)number_edges) / (double)(number_nodes);
+           denset_size  = number_edges;
+
+           if(max_average_density < average_density && max_denset_size < denset_size){
+               max_average_density = average_density;
+               max_denset_size     = denset_size;
+               max_edge_density    = edge_density;
+           }
+    }
+
+    printf("denset graph:");
+    printf("average density = %f\n",max_average_density);
+    printf("edges density   = %f\n",max_edge_density);
+    printf("denset size     = %lu\n",max_denset_size);
+
+    free(marked);
+}
+
+double* density_score(edgelist *e_list, int times)
+{
+    unsigned long i,j;
+    double* score_t = calloc((e_list->n+1),sizeof(double));
+
+    for (i = 0; i < times; i++)
+    {
+        for (j = 0; j < e_list->e; j++)
+        {
+            if(score_t[e_list->edges[j].s] <= score_t[e_list->edges[j].t]){
+                score_t[e_list->edges[j].s]++;
+            }else
+            {
+                score_t[e_list->edges[j].t]++;
+            }
+        }
+    }
+
+    for ( i = 1; i < e_list->n+1; i++)
+    {
+        score_t[i] = score_t[i] / (double)times;
+    }
+
+    return score_t;
+}
+
+unsigned* communauty_triangle(adjlist* adj_list){
+
+    unsigned * communauty = calloc(adj_list->n+1,sizeof(unsigned));
+    unsigned color        = 1;
+
+    unsigned long i,j,count,i_1,i_2,l_1,l_2;
+    triangle tri;
+    count = 0;
+    for (i = 1; i < adj_list->n; i++)
+    {
+        /*find triangle*/
+        for (j = adj_list->cd[i-1]; j < adj_list->cd[i]; j++)
+        {
+            tri.p_1 = i;
+            tri.p_2 = adj_list->adj[j];
+
+            if(n_of_neighbor(adj_list,tri.p_2) == 0) continue;
+
+            /*find third node*/
+            i_1 = adj_list->cd[tri.p_1-1];
+            i_2 = adj_list->cd[tri.p_2-1];
+
+            l_1 = adj_list->cd[tri.p_1];
+            l_2 = adj_list->cd[tri.p_2];
+
+            while (i_1 < l_1 && i_2 < l_2)
+            {
+                /*printf(" -> %lu %lu %lu %lu\n",tri.p_1, tri.p_2, adj_list->adj[i_1], adj_list->adj[i_2]);*/
+                if(adj_list->adj[i_1] < adj_list->adj[i_2]){
+                    i_1++;
+                }else if(adj_list->adj[i_1] > adj_list->adj[i_2]){
+                    i_2++;
+                }else if(adj_list->adj[i_1] == adj_list->adj[i_2]){
+                    
+                    tri.p_3 = adj_list->adj[i_1];
+                    i_1++;
+                    i_2++;
+
+                    if(communauty[tri.p_1] != 0 && communauty[tri.p_1] == communauty[tri.p_2])
+                    {
+                        communauty[tri.p_3] = communauty[tri.p_1];
+                    }else if(communauty[tri.p_1] != 0 && communauty[tri.p_1] == communauty[tri.p_3])
+                    {
+                        communauty[tri.p_2] = communauty[tri.p_1];
+                    }else if(communauty[tri.p_2] != 0 && communauty[tri.p_3] == communauty[tri.p_2])
+                    {
+                        communauty[tri.p_1] = communauty[tri.p_2];
+                    }
+
+                    if(communauty[tri.p_1] != 0 && communauty[tri.p_2] != 0 && communauty[tri.p_3] != 0)
+                    {
+
+                    }else if(communauty[tri.p_1] != 0){
+
+                    }else if(communauty[tri.p_2] != 0){
+
+                    }else if(communauty[tri.p_3] != 0){
+
+                    }
+                }
+            }
+        }      
+    }
+    return communauty;
+}
+
+
