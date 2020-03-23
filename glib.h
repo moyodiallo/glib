@@ -250,7 +250,9 @@ int equals_P(double* P, double* P_N, unsigned long n);
  * @param num_node 
  * @return unsigned long 
  */
-unsigned long kcore(adjlist *a_list , unsigned long *n_deg, unsigned long *core_node, unsigned long *num_node);
+unsigned long kcore(adjlist *a_list , 
+	unsigned long *n_deg, unsigned long *core_node, 
+	unsigned long *num_node, unsigned long *pref_size);
 
 
 /**
@@ -278,5 +280,13 @@ void kcore_density(adjlist *a_list, unsigned long *core_node, unsigned long *pre
  * @return unsigned* density_score 
  */
 double* density_score(edgelist *e_list, int times);
+
+/**
+ * @brief 
+ * 
+ * @param a_list 
+ * @param long 
+ */
+void denset_subgraph(adjlist* a_list, unsigned long* prefix_node, unsigned long prefix_size);
 
 #endif

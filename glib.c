@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <limits.h>
 
 #include "glib.h"
 
@@ -674,7 +675,7 @@ double* page_rank(edgelist* e_list_direct, double alpha, unsigned theta, int tra
 
     
 
-    if(trace == 1) printf("iterations: %lu | total rank %f\n",j,som);
+    if(trace == 1) printf("iterations: %lu | total rank %f\n",j,som*100);
     return P;
 }
 
@@ -748,8 +749,8 @@ unsigned long pop_heap(heap* h, unsigned long* deg, unsigned long* position){
     }
 
     h->value[0]  = h->value[h->index-1];
-    h->index--;
     position[h->value[h->index-1]] = 0;
+    h->index--;
     down_heap(h,deg,0,position);
 
     return p;
@@ -768,12 +769,14 @@ void up_heap(heap* h, unsigned long* deg, unsigned long index,unsigned long* pos
         return;
     }
 
-    if(deg[h->value[index]] < deg[h->value[(index-1)/2]]){
+    unsigned long father = (index-1)/2;
 
-        exchange(h->value,index,(index-1)/2);
-        exchange(position,h->value[index],h->value[(index-1)/2]);
+    if(deg[h->value[index]] < deg[h->value[father]]){
 
-        up_heap(h,deg,(index-1)/2,position);
+        exchange(h->value,index,father);
+        exchange(position,h->value[index],h->value[father]);
+
+        up_heap(h,deg,father,position);
     }
 }
 
@@ -793,7 +796,7 @@ void down_heap(heap* h, unsigned long* deg, unsigned long index, unsigned long* 
 
     if(smallest != index){
         exchange(h->value,smallest,index);
-        exchange(position,smallest,index);
+        exchange(position, h->value[smallest],h->value[index]);
 
         down_heap(h,deg,smallest,position);
     }
@@ -832,106 +835,125 @@ void percolate(heap* h, unsigned long* deg, unsigned long* position)
     max_heapfy(h,deg,position,0);
 }
 
-unsigned long kcore(adjlist* a_list , unsigned long* n_deg, unsigned long* core_node, unsigned long* prefix_node)
+unsigned long kcore(adjlist* a_list , unsigned long* n_deg, 
+    unsigned long *core_node, unsigned long *prefix_node, unsigned long *pref_size)
 {
-    unsigned long prefix = a_list->n;
+    unsigned long prefix = 0;
     unsigned long core   = 0;
-    unsigned long j,i,node,ng;
+    unsigned long node,ng;
     unsigned long* position;
 
     unsigned long max_deg = 0;
-    
+
+    char* mark = calloc(a_list->n+1,sizeof(char));
 
     heap h;
     h.value  = calloc(a_list->n,sizeof(unsigned long));
     position = calloc(a_list->n+1,sizeof(unsigned long)); /*store all position in value*/
     h.index  = 0;
 
-    for (j = 0; j < a_list->n; j++)
+    for (size_t j = 0; j < a_list->n; j++)
     {
         if(n_deg[j+1] != 0)
         {
-            h.value[h.index] = j+1;
-            h.index++;
+            prefix++;
+            h.value[h.index++] = j+1;
         }
     }
 
-    for (i = 0; i < h.index; i++)
+    *pref_size = prefix;
+
+    for (size_t i = 0; i < h.index; i++)
     {
         position[h.value[i]] = i;
     }
     
-    percolate(&h,n_deg,position);
+    percolate(&h,n_deg,position); //make heap
+    
+    unsigned long count = 0;
+    for (size_t i = 0; i < h.index; i++)
+    {
+        if(h.value[i] == 41501)
+            count++;
+    }
 
     while (h.index != 0)
     {
         node = pop_heap(&h,n_deg,position);
-
+       
         if(core < n_deg[node]){
             core = n_deg[node];
         }
-
+        
+        prefix--;
         core_node[prefix]    = core;
         prefix_node[prefix]  = node;
-        prefix--;
+        mark[node]           = 1; 
 
-        for (j = a_list->cd[node-1]; j < a_list->cd[node]; j++)
+        for (size_t j = a_list->cd[node-1]; j < a_list->cd[node]; j++)
         {
             ng = a_list->adj[j];
-            if(core_node[ng] == 0){
+             
+            if(mark[ng] != 1)
+            {
                 n_deg[ng]--;
                 up_heap(&h,n_deg,position[ng],position);
             }
         }
-    }
+    }       
 
     free(h.value);
     return core;
 }
 
-void denset_subgraph(adjlist* a_list, unsigned long* prefix_node){
-    unsigned long i,j,node;
-    unsigned long number_nodes;
-    unsigned long number_edges;
-
+void denset_subgraph(adjlist* a_list, unsigned long* prefix_node, unsigned long prefix_size)
+{
+    unsigned long node;
+    unsigned long number_nodes = 0;
+    unsigned long number_edges = 0;
+ 
     double edge_density         = 0.0;
-    double average_density      = 0.0;
+    double average_degree       = 0.0;
     unsigned long denset_size   = 0;
 
     double max_edge_density         = 0.0;
-    double max_average_density      = 0.0;
+    double max_average_degree       = 0.0;
     unsigned long max_denset_size   = 0;
 
 
 
     char* marked = calloc(a_list->n+1,sizeof(char));
 
-    for ( i = 1; i < a_list->n+1; i++)
-    {
-            marked[i] = 1;
-            node      = prefix_node[i];
-            for (j = a_list->cd[node-1]; j < a_list->cd[node]; j++)
+    for (size_t i = 0; i < prefix_size; i++)
+    {   
+            node         = prefix_node[i];
+            marked[node] = 1;
+            number_nodes++;
+
+            for (size_t j = a_list->cd[node-1]; j < a_list->cd[node]; j++)
             {
-                if(marked[a_list->adj[j]] == 1){
+                if(marked[a_list->adj[j]] == 1)
+                {
                     number_edges++;
                 }
             }
 
-           edge_density    = ((double)number_edges) / (double)(number_nodes*(number_nodes-1))/2.0;
-           average_density = ((double)number_edges) / (double)(number_nodes);
-           denset_size  = number_edges;
+            edge_density    = ((double)number_edges) / ((double)(number_nodes*(number_nodes-1))/2.0);
+            average_degree  = ((double)number_edges) / (double)(number_nodes);
+            denset_size     = number_edges;
 
-           if(max_average_density < average_density && max_denset_size < denset_size){
-               max_average_density = average_density;
+           if(max_average_degree < average_degree && max_denset_size < denset_size)
+           {
+               max_average_degree = average_degree;
                max_denset_size     = denset_size;
                max_edge_density    = edge_density;
            }
     }
 
-    printf("denset graph:");
-    printf("average density = %f\n",max_average_density);
-    printf("edges density   = %f\n",max_edge_density);
-    printf("denset size     = %lu\n",max_denset_size);
+    printf("denset graph:\n");
+    printf("    average degree density  = %f\n",max_average_degree/2.0);
+    printf("    edges density           = %f\n",max_edge_density);
+    printf("    denset size             = %lu\n",max_denset_size);
 
     free(marked);
 }
