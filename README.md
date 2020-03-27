@@ -24,6 +24,11 @@ Ploting with No color of node
 
 Ploting with color
 ```
+file_color : node id_color
+example:
+    1 0
+    2 0
+
 ./graph_plot_color.py <file_links> <file_color>
 ```
 
