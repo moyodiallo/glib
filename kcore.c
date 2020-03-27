@@ -19,9 +19,10 @@ int main(int argc, char** argv){
     unsigned long n_of_node = atoi(argv[2]);
     unsigned long n_of_edge = atoi(argv[3]);
 
-    unsigned long* n_deg      = calloc(n_of_node+1,sizeof(unsigned long));
-    unsigned long* node_core  = calloc(n_of_node+1,sizeof(unsigned long));
-    unsigned long* pref_node  = calloc(n_of_node+1,sizeof(unsigned long));
+    unsigned long* n_deg        = calloc(n_of_node+1,sizeof(unsigned long));
+    unsigned long* n_deg_d      = calloc(n_of_node+1,sizeof(unsigned long));
+
+    
 
     edgelist* e_list = make_edgelist_file(file,n_of_node,n_of_edge,0);
     adjlist*  a_list = make_adjlist_edges(e_list);
@@ -31,18 +32,24 @@ int main(int argc, char** argv){
         n_deg[e_list->edges[i].s]++;
         n_deg[e_list->edges[i].t]++;
 
+        n_deg_d[e_list->edges[i].s]++;
+        n_deg_d[e_list->edges[i].t]++;
+
     }
 
-
     free_edgelist(e_list);
+
+    unsigned long* node_core  = calloc(n_of_node+1,sizeof(unsigned long));
+    unsigned long* pref_node  = calloc(n_of_node+1,sizeof(unsigned long));
     core = kcore(a_list,n_deg,node_core,pref_node,&prefix_size);
-    free(n_deg);     
+    free(n_deg);
+         
 
     if(argv[4][0] == 'p'){
        for (i = 1; i < n_of_node+1; i++)
        {
            if(node_core[i] != 0){
-               printf("%lu %lu\n",i,node_core[i]);
+               printf("%lu %lu %lu\n",i,node_core[i],n_deg_d[i]);
            }
        }  
     }

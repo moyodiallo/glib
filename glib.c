@@ -5,6 +5,8 @@
 
 #include "glib.h"
 
+//#define DEBUG
+
 void print_edgelsit(edgelist* e_list){
     unsigned long i ;
     for (i= 0; i < e_list->e; i++)
@@ -825,7 +827,7 @@ void max_heapfy(heap* h, unsigned long* deg, unsigned long* position, unsigned l
 void percolate(heap* h, unsigned long* deg, unsigned long* position)
 {
     unsigned long i = h->index/2;
-    unsigned long node_val,father,father_val;
+    //unsigned long node_val,father,father_val;
 
     while (i > 0)
     {   
@@ -835,6 +837,7 @@ void percolate(heap* h, unsigned long* deg, unsigned long* position)
     max_heapfy(h,deg,position,0);
 }
 
+
 unsigned long kcore(adjlist* a_list , unsigned long* n_deg, 
     unsigned long *core_node, unsigned long *prefix_node, unsigned long *pref_size)
 {
@@ -843,7 +846,7 @@ unsigned long kcore(adjlist* a_list , unsigned long* n_deg,
     unsigned long node,ng;
     unsigned long* position;
 
-    unsigned long max_deg = 0;
+    //unsigned long max_deg = 0;
 
     char* mark = calloc(a_list->n+1,sizeof(char));
 
@@ -869,13 +872,6 @@ unsigned long kcore(adjlist* a_list , unsigned long* n_deg,
     }
     
     percolate(&h,n_deg,position); //make heap
-    
-    unsigned long count = 0;
-    for (size_t i = 0; i < h.index; i++)
-    {
-        if(h.value[i] == 41501)
-            count++;
-    }
 
     while (h.index != 0)
     {
@@ -886,7 +882,7 @@ unsigned long kcore(adjlist* a_list , unsigned long* n_deg,
         }
         
         prefix--;
-        core_node[prefix]    = core;
+        core_node[node]      = core;
         prefix_node[prefix]  = node;
         mark[node]           = 1; 
 
@@ -958,14 +954,15 @@ void denset_subgraph(adjlist* a_list, unsigned long* prefix_node, unsigned long 
     free(marked);
 }
 
-double* density_score(edgelist *e_list, int times)
+double* density_score(edgelist *e_list, int times, unsigned long *pref_size, unsigned long **pref_order)
 {
-    unsigned long i,j;
     double* score_t = calloc((e_list->n+1),sizeof(double));
 
-    for (i = 0; i < times; i++)
+    unsigned long prefix = 0;
+
+    for (size_t i = 0; i < (size_t)times; i++)
     {
-        for (j = 0; j < e_list->e; j++)
+        for (size_t j = 0; j < e_list->e; j++)
         {
             if(score_t[e_list->edges[j].s] <= score_t[e_list->edges[j].t]){
                 score_t[e_list->edges[j].s]++;
@@ -976,26 +973,85 @@ double* density_score(edgelist *e_list, int times)
         }
     }
 
-    for ( i = 1; i < e_list->n+1; i++)
+    for (size_t i = 1; i < e_list->n+1; i++)
     {
-        score_t[i] = score_t[i] / (double)times;
+        if(score_t[i] != 0){
+            score_t[i] = score_t[i] / (double)times;
+            prefix++;
+        }
+    }
+   
+
+    //prefix order
+    unsigned long *prefix_order = malloc(prefix*sizeof(unsigned long));
+
+    
+    //prepare for sort
+    heap *prefix_heap              = make_heap(prefix);
+    unsigned long *prefix_position = calloc((e_list->n+1),sizeof(unsigned long));
+    double *score_deg              = score_t;
+
+    //heap value
+    for (size_t i = 1; i < e_list->n+1; i++)
+    {   
+        if(score_deg[i] != 0){
+            prefix_heap->value[prefix_heap->index++] = i;
+        }
     }
 
+    //heap position
+    for (size_t i = 0; i < prefix; i++)
+    {
+        prefix_position[prefix_heap->value[i]] = i;
+    }
+
+    percolate_degDouble(prefix_heap,score_deg,prefix_position);
+    for (size_t i = 0; i < prefix; i++)
+    {
+        unsigned long          v = pop_heap_degDouble(prefix_heap,score_deg,prefix_position);
+        prefix_order[prefix-i-1] = v;
+    }
+    
+    *pref_size = prefix;
+    *pref_order = prefix_order;
+
+    #ifdef DEBUG 
+    for (size_t i = 0; i < prefix; i++)
+    {
+        printf("prefix %lu\n",prefix_order[i]);
+    }
+    
+    #endif
+
+
+    free(prefix_position);
+    free_heap(prefix_heap);
     return score_t;
 }
 
 unsigned* communauty_triangle(adjlist* adj_list){
 
     unsigned * communauty = calloc(adj_list->n+1,sizeof(unsigned));
-    unsigned color        = 1;
+    //unsigned color        = 1;
 
-    unsigned long i,j,count,i_1,i_2,l_1,l_2;
+    unsigned long i_1,i_2,l_1,l_2;
     triangle tri;
-    count = 0;
-    for (i = 1; i < adj_list->n; i++)
+
+    for (size_t i = 1; i < adj_list->n+1; i++)
+    {
+        if(n_of_neighbor(adj_list,i) != 0){
+            communauty[i] = i;
+        }else
+        {
+            communauty[i] = 0;
+        }
+        
+    }
+
+    for (size_t i = 1; i < adj_list->n; i++)
     {
         /*find triangle*/
-        for (j = adj_list->cd[i-1]; j < adj_list->cd[i]; j++)
+        for (size_t j = adj_list->cd[i-1]; j < adj_list->cd[i]; j++)
         {
             tri.p_1 = i;
             tri.p_2 = adj_list->adj[j];
@@ -1025,23 +1081,19 @@ unsigned* communauty_triangle(adjlist* adj_list){
                     if(communauty[tri.p_1] != 0 && communauty[tri.p_1] == communauty[tri.p_2])
                     {
                         communauty[tri.p_3] = communauty[tri.p_1];
+
                     }else if(communauty[tri.p_1] != 0 && communauty[tri.p_1] == communauty[tri.p_3])
                     {
                         communauty[tri.p_2] = communauty[tri.p_1];
+
                     }else if(communauty[tri.p_2] != 0 && communauty[tri.p_3] == communauty[tri.p_2])
                     {
                         communauty[tri.p_1] = communauty[tri.p_2];
-                    }
 
-                    if(communauty[tri.p_1] != 0 && communauty[tri.p_2] != 0 && communauty[tri.p_3] != 0)
+                    }else
                     {
-
-                    }else if(communauty[tri.p_1] != 0){
-
-                    }else if(communauty[tri.p_2] != 0){
-
-                    }else if(communauty[tri.p_3] != 0){
-
+                        communauty[tri.p_1] = communauty[tri.p_2];
+                        communauty[tri.p_3] = communauty[tri.p_1];
                     }
                 }
             }
@@ -1050,4 +1102,72 @@ unsigned* communauty_triangle(adjlist* adj_list){
     return communauty;
 }
 
+void down_heap_degDouble(heap* h, double* deg, unsigned long index, unsigned long* position){
+    unsigned long smallest = index;
+    unsigned long left     = 2*smallest+1;
+    unsigned long right    = 2*smallest+2;
 
+    if(right < h->index && deg[h->value[right]] < deg[h->value[smallest]]){
+        smallest = right;
+    }
+
+    if(left < h->index && deg[h->value[left]] < deg[h->value[smallest]]){
+        smallest = left;
+    }
+
+    if(smallest != index){
+        exchange(h->value,smallest,index);
+        exchange(position, h->value[smallest],h->value[index]);
+
+        down_heap_degDouble(h,deg,smallest,position);
+    }
+}
+
+void percolate_degDouble(heap* h, double* deg, unsigned long* position)
+{
+    unsigned long i = h->index/2;
+    //unsigned long node_val,father,father_val;
+
+    while (i > 0)
+    {   
+        max_heapfy_degDouble(h,deg,position,i);
+        i--;
+    }
+    max_heapfy_degDouble(h,deg,position,0);
+}
+
+void max_heapfy_degDouble(heap* h, double* deg, unsigned long* position, unsigned long i){
+    unsigned long left     = 2*i+1;
+    unsigned long right    = 2*i+2;
+    unsigned long largest  = i;
+
+    if(left < h->index && deg[h->value[left]] < deg[h->value[largest]]){
+        largest = left;
+    }
+
+    if(right < h->index && deg[h->value[right]] < deg[h->value[largest]]){
+        largest = right;
+    }
+
+    if(largest != i){
+        exchange(h->value,largest,i);
+        exchange(position,h->value[largest],h->value[i]);
+        max_heapfy_degDouble(h,deg,position,largest);
+    }
+}
+
+unsigned long pop_heap_degDouble(heap* h, double* deg, unsigned long* position){
+    unsigned long p = h->value[0];
+
+    if(h->index == 0){
+        printf("fail: heap is empty\n");
+        exit(EXIT_FAILURE);
+    }
+
+    h->value[0]  = h->value[h->index-1];
+    position[h->value[h->index-1]] = 0;
+    h->index--;
+    down_heap_degDouble(h,deg,0,position);
+
+    return p;
+}

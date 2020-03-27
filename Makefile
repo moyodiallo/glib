@@ -4,7 +4,7 @@ LDFLAGS = -O3
 EXEC    = norm test n_of_graph norm_inc print_test gen_graph \
            label shuffle fifo direct_by_deg triangle connected diameter page_rank\
 		   cluster load_adjarray load_edges load_matrix real_nb_node \
-			kcore heap_test score
+			kcore heap_test score heap_test2 communauty_triangle
 
 all: $(EXEC)
 
@@ -32,6 +32,9 @@ load_matrix   : glib.o
 real_nb_node  :
 heap_test 	  : glib.o
 score         : glib.o
+heap_test2 	  : glib.o
+
+communauty_triangle : glib.o
 
 
 %: %.o

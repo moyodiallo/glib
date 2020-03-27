@@ -21,7 +21,9 @@ int main(int argc, char** argv){
 
     edgelist* e_list = make_edgelist_file(file,n_of_node,n_of_edge,0);
 
-    double* score = density_score(e_list,times);
+    unsigned long prefix_size;
+    unsigned long *prefix_order;
+    double* score = density_score(e_list,times,&prefix_size,&prefix_order);
 
     if(argv[5][0] == 'p'){
         for (i = 1; i < n_of_node+1; i++)
@@ -29,4 +31,26 @@ int main(int argc, char** argv){
             printf("%lu %f\n",i,score[i]);
         }
     }
+
+    double max_score = 0;
+    for (size_t i = 1; i < n_of_node+1; i++)
+    {
+        if(score[i] > max_score)
+        {
+            max_score = score[i];
+        }
+    }
+    
+
+    free(score);
+    adjlist *a_list = make_adjlist_edges(e_list);
+    free_edgelist(e_list);
+
+    if(argv[5][0] == 'n'){
+        printf("score max density = %f\n",max_score);
+        denset_subgraph(a_list,prefix_order,prefix_size);
+    }
+
+    free(prefix_order);
+    free_adjlist(a_list);
 }

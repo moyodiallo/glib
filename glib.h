@@ -36,6 +36,11 @@ void push_heap(heap* h, unsigned long* deg, unsigned long node, unsigned long* p
 unsigned long pop_heap(heap* h, unsigned long* deg, unsigned long* position);
 void percolate(heap* h, unsigned long* deg, unsigned long* position);
 
+void percolate_degDouble(heap* h, double* deg, unsigned long* position);
+void down_heap_degDouble(heap* h, double* deg, unsigned long index, unsigned long* position);
+void max_heapfy_degDouble(heap* h, double* deg, unsigned long* position, unsigned long i);
+unsigned long pop_heap_degDouble(heap* h, double* deg, unsigned long* position);
+
 /**
  * @brief 
  * 
@@ -245,14 +250,14 @@ int equals_P(double* P, double* P_N, unsigned long n);
  * @brief 
  * 
  * @param a_list 
- * @param n_deg 
+ * @param long 
  * @param core_node 
- * @param num_node 
+ * @param prefix_node 
+ * @param pref_size 
  * @return unsigned long 
  */
-unsigned long kcore(adjlist *a_list , 
-	unsigned long *n_deg, unsigned long *core_node, 
-	unsigned long *num_node, unsigned long *pref_size);
+unsigned long kcore(adjlist* a_list , unsigned long* n_deg, 
+    unsigned long *core_node, unsigned long *prefix_node, unsigned long *pref_size);
 
 
 /**
@@ -277,9 +282,11 @@ void kcore_density(adjlist *a_list, unsigned long *core_node, unsigned long *pre
  * 
  * @param e_list 
  * @param times 
- * @return unsigned* density_score 
+ * @param pref_size 
+ * @param pref_order 
+ * @return double* 
  */
-double* density_score(edgelist *e_list, int times);
+double* density_score(edgelist *e_list, int times, unsigned long *pref_size, unsigned long **pref_order);
 
 /**
  * @brief 
