@@ -14,7 +14,18 @@ by 1 and never mind for espace or tab to separate the nodes of a edges:
 ```
 ![Graph of ./data/test.txt](graph.png)
 
+## Ploting Graph network
 
+Ploting with No color of node
+
+```
+./graph_plot.py <file_links>
+```
+
+Ploting with color
+```
+./graph_plot_color.py <file_links> <file_color>
+```
 
 ## Compute number of nodes and edges 
 Before to manipulate a graph you have know some proprieties
