@@ -14,7 +14,9 @@ int main(int argc, char** argv){
     unsigned long n_of_edge = atoi(argv[3]);
 
     edgelist* e_list = make_edgelist_file(file,n_of_node,n_of_edge,0);
+    printf("edges loaded\n");
     adjlist* a_list  = make_adjlist_edges(e_list);
+    printf("adjarray built\n");
 
     free_edgelist(e_list);
     free_adjlist(a_list);
