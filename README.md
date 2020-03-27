@@ -3,13 +3,16 @@
 The graph format must be like, no loop and your node must begin 
 by 1 and never mind for espace or tab to separate the nodes of a edges:
 ```
-1 2
+6 2
+6 4
+6 5
+1 4
+1 5
 2 3
-3 4
+2 4
 4 5
 ```
-
-![Graph of ./data/test.txt](.images/test.png)
+![Graph of ./data/test.txt](graph.png)
 
 
 
@@ -20,11 +23,11 @@ Before to manipulate a graph you have know some proprieties
 ```
 
 ``` example:
-./n_of_node data/test.txt
+./n_of_node graph.txt
 
 Output:
-n_of_node :
-n_of_edge :
+n_of_node : 6
+n_of_edge : 8
 ```
 
 ## Compute connected components
@@ -55,7 +58,7 @@ To compute triangles, you have follow execute some commands before(Preparing the
 For the results to be true, you have to prepare the file.
 ```
 ./direct_by_deg <file_orignal> <n_of_node> <n_of_edges> > <file_directed>
-sort -n k2 <file_directed> > <file_directed_sorted>
+sort -n -k2 <file_directed> > <file_directed_sorted>
 ```
 
 ### computing triangle
@@ -107,7 +110,7 @@ The source is from this link [https://sourceforge.net/projects/louvain/](https:/
 ### Using 3-clique
 
 ### Page Rank
-Page Rank implemented
+PageRank implemented the pagerank of a link is around [0% -100%]
 
 ```
 p = print (node,page_rank value)
@@ -116,7 +119,32 @@ o = print (node, page_rank, deg_out of page)
 n = print the 20  ranked page (page id,page_rank)
 t = print iterations
 
-./page_rank <file> <n_of_edge> <n_of_edge> <alpha> <theta> <p,i,o,or n>
+./page_rank <file> <n_of_node> <n_of_edge> <alpha> <theta> <p,i,o,or n>
 ```
 
-## Benchmarks
+### K-Core
+Compute core value of a graph
+```
+p = print (node,core value,degree of node)
+n = + print max core value 
+    + ordered by this core value print also
+        - average degree density
+        - edges density
+        - denset graph
+
+./kcore <file> <n_of_node> <n_of_edge> <p,n>
+
+example:
+./kcore ~/stl-cpa-datasets/CPA_Data/com-amazon.ungraph-clean.txt 548551 925872 n
+```
+
+### Score value
+Compute density score [Maximilien Danisch][https://drive.google.com/file/d/1ANtqxudwaqZHX3lrBFXclp2XO-fyNDY7/view]
+```
+p = print (node,score)
+n = print ordered by score value
+    + average degree density
+    + edges density
+    + denset graph
+./score <file> <n_of_node> <n_of_edge> <p,n>
+``` 
